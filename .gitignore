@@ -1,0 +1,49 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+deploy/certs/dev/*
+!deploy/certs/dev/.gitkeep
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Node and browser tests
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Runtime and diagnostics
+.local/
+*.log
+*.pid
+*.partial
+*.dump
+*.sql
+*.rbac-sys.backup
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
