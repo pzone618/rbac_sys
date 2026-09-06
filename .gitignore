@@ -1,49 +1,95 @@
-# Secrets and local environment
+# Local environment and credentials (commit only sanitized examples)
 .env
 .env.*
 !.env.example
+.envrc
+.pgpass
+.pg_service.conf
 *.pem
 *.key
 *.p12
 *.pfx
-deploy/certs/dev/*
-!deploy/certs/dev/.gitkeep
+# Public PEM fixtures need a reviewed, exact-path exception; never allow all keys.
+/deploy/certs/dev/*
+!/deploy/certs/dev/.gitkeep
 
-# Python
+# Python environments, bytecode, packaging and tool caches
 .venv/
-**/.venv/
+venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
+.eggs/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pyright/
+.tox/
+.nox/
+.hypothesis/
+.uv-cache/
 .coverage
 .coverage.*
 htmlcov/
+coverage.xml
 
-# Node and browser tests
+# Node / TypeScript / Vite generated dependencies and outputs
 node_modules/
 dist/
 build/
+.npm/
+.vite/
+.vite-temp/
+*.tsbuildinfo
 coverage/
+*.lcov
+
+# Playwright artifacts and authenticated browser state
+# Keep screenshots/fixtures outside these output directories trackable.
 playwright-report/
 test-results/
 blob-report/
+**/playwright/.auth/
 
-# Runtime and diagnostics
-.local/
+# Local runtime data, certificates, backup keys and diagnostics
+/.local/
+/storage/
 *.log
+*.log.*
 *.pid
+*.pid.lock
 *.partial
 *.dump
-*.sql
-*.rbac-sys.backup
+*.dump.gz
+*.dump.zst
+*.backup
+*.backup.gz
+*.backup.zst
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+# SQL source, migrations and fixtures are versioned. Store SQL exports in
+# /.local/ or /storage/; ignore conventional compressed/labelled dumps elsewhere.
+*.sql.gz
+*.sql.zst
+*.dump.sql
 
-# Editors and operating systems
+# Editors and operating-system metadata
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 .DS_Store
+._*
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
 Thumbs.db
 Desktop.ini
+
+# Keep manifests, lockfiles, migrations, public fixtures and verification
+# documents trackable; do not add blanket *.sql, *.json, *.png or *.zip rules.

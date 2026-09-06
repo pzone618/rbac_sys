@@ -1,6 +1,38 @@
-# rbac_sys：RBAC Phase 1 完整基础系统重建提示词 v1.12
+# rbac_sys：RBAC Phase 1 完整基础系统重建提示词 v1.17
 
-> 本文件基于 `docs/prompts/rebuild-rbac-system-v1.md` 实例化生成。以下工程标识与端口是本次构建的唯一权威输入，不得擅自改名或改端口。
+> 本文件由 `docs/prompts/rebuild-rbac-system-v1.md` 实例化；第 1 节唯一输入块已填写，不重复询问已有参数，不擅自改名或改端口。
+
+### v1.17 变更记录
+
+- 测试服务及专用资源仅在测试 Compose 文件声明，消除生产合并配置夹带测试服务的矛盾。
+- 区分生产内部服务与禁止公开的端口，补齐后端测试依赖、迁移、初始化及清理入口。
+- 明确模板独立使用边界，实例运行资料不作为模板提交或重新生成的前置依赖。
+
+### v1.16 变更记录
+
+- 将宿主机 CA 信任列为首次开发启动的必需步骤，区分签发证书、安装信任和浏览器验证。
+- 补齐跨平台安装/撤销、CA 身份核对及 Certificate Error 排障，增加未信任与轮换验收。
+
+### v1.15 变更记录
+
+- 固定各场景服务白名单、用途、数量与生命周期；开发默认 7 个服务，测试与调试按需启动。
+- 明确 Compose 分组、临时任务、测试隔离和生产服务边界，禁止通过改名或反复试建规避冲突。
+- 增加拓扑清单、重复启动和失败恢复验收；修正默认启动命令及 maintenance 描述。
+
+### v1.14 变更记录
+
+- 修正备份目录/文件权限与秘密传递示例；Compose 验证默认静默，只保留脱敏摘要。
+- 将 E2E 明确为独立测试服务、数据、限流和 fixture，不依赖开发管理员初始密码。
+- 补齐真实 provider 健康探针、上游容器重建、数据库故障恢复和证书重复初始化验收。
+- 明确代理信任来源与 Uvicorn hostname 边界；统一根 workspace 命令和 smoke URL 语义。
+- 增加实施状态/验证证据矩阵，区分已实现与实际通过；不降低完整 Phase 1 完成条件。
+
+### v1.13 变更记录
+
+- 明确特权账户保护与角色授予边界，禁止通过用户创建、改密或角色管理间接提权。
+- 统一改密后全部退出，定义稳定 session family、即时撤销及多标签页刷新协调。
+- 补齐 E2E 容器网络与 Chromium/Firefox CA 验证，修正 Quadlet 开机启动命令。
+- 区分重复启动与外部端口冲突，明确模板输入、实例展开和扫描器边界，增加对应验收用例。
 
 ### v1.12 变更记录
 
@@ -9,25 +41,6 @@
 - 明确 README 只能记录连接方法、账户名和凭据来源，不得写入真实密码；补充 uv、npm 与 Podman 的环境职责矩阵。
 - 固定所有 Compose 命令显式使用同一个 `.env`，增加实际 provider 的最小构建兼容测试。
 - 增加版本严格匹配且预装浏览器的 Playwright E2E 容器契约，并明确单机生产的 Podman/Quadlet 生命周期。
-
-```yaml
-template_inputs:
-  project_display_name: "rbac_sys"
-  project_slug: "rbac-sys"
-  project_db_prefix: "rbac_sys"
-  container_registry: "localhost/rbac-sys"
-  dev_hostname: "rbac-sys.localhost"
-  ports:
-    web_dev_tls: 31443
-    web_redirect: 31080
-    web_tls: 31444
-    postgres: 35432
-    postgres_test: 35433
-    redis: 36379
-    mailpit_smtp: 31025
-    mailpit_ui: 38025
-    redisinsight: 35540
-```
 
 > 将本文件全文交给编码 Agent 执行。本阶段只建设认证、RBAC、会话和安全审计底座，不实现任何学习业务。交付物必须可运行、可迁移、可测试、可部署；禁止只生成脚手架、伪代码或静态页面。
 
@@ -50,18 +63,18 @@ template_inputs:
 
 ### 模板输入、项目标识与同机隔离契约
 
-本文件是可重复使用的工程生成模板。每次执行前，调用者必须提供下面的模板输入；双花括号形式只允许存在于这份模板源文件中，生成后的源码、运行配置、锁文件、项目文档和测试不得残留模板占位符。模板源文件不是生成工程的运行时输入；若为留档而保留，只能由检查器按这个精确文件路径排除，不能排除整个 `docs/prompts`。缺少必填值、格式非法或与同机已登记工程冲突时，编码 Agent 必须在写文件前一次性询问，不得猜测工程名、端口或 namespace。
+本文件是可重复使用的工程生成模板。使用通用模板时调用者必须提供完整输入块；使用已实例化文件时直接读取其唯一 `template_inputs` 块，不重复索取已提供的值。缺少必填值、格式非法或与同机已登记工程冲突时，在写业务文件前一次性列出问题，不得猜测或静默改值。模板源文件不是运行时输入；占位符扫描只允许按精确路径排除 `docs/prompts/rebuild-rbac-system-v1.md`，不得排除实例文件或整个目录。实例化只替换参数值，保留参数名称、配置变量与派生规则。
 
 | 输入 | 必填 | 格式与用途 |
 |---|---:|---|
-| `rbac_sys` | 是 | 面向用户的产品名称；1–80 个可显示 Unicode 字符 |
-| `rbac-sys` | 是 | 全局资源 namespace；`^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`，同机唯一 |
-| `rbac_sys` | 是 | PostgreSQL/identifier 安全前缀；`^[a-z][a-z0-9_]{1,39}$`，通常由 slug 的 `-` 转 `_` 后显式确认 |
-| `localhost/rbac-sys` | 是 | 镜像 registry/namespace，不含尾随 `/` |
-| `rbac-sys.localhost` | 是 | 本地证书 SAN、浏览器 URL、CORS/CSRF/E2E 共用 hostname；不得含 scheme/port/path |
-| `31443` 等端口输入 | 是 | 见第 15 节；每个值在 30000–39999 内且同机唯一 |
+| `PROJECT_DISPLAY_NAME` | 是 | 面向用户的产品名称；1–80 个可显示 Unicode 字符 |
+| `PROJECT_SLUG` | 是 | 全局资源 namespace；`^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`，同机唯一 |
+| `PROJECT_DB_PREFIX` | 是 | PostgreSQL/identifier 安全前缀；`^[a-z][a-z0-9_]{1,39}$`，通常由 slug 的 `-` 转 `_` 后显式确认 |
+| `CONTAINER_REGISTRY` | 是 | 镜像 registry/namespace，不含尾随 `/` |
+| `DEV_HOSTNAME` | 是 | 本地证书 SAN、浏览器 URL、CORS/CSRF/E2E 共用 hostname；不得含 scheme/port/path |
+| `WEB_DEV_TLS_HOST_PORT` 等端口输入 | 是 | 见第 15 节；每个值在 30000–39999 内且同机唯一 |
 
-每次调用时必须在提示词前附加或替换为以下完整输入块，不能只提供显示名：
+通用模板填写以下完整输入块，不能只提供显示名；实例文件仅保留这一处已填写的输入块，文件标题不是第二个配置来源：
 
 ```yaml
 template_inputs:
@@ -101,10 +114,10 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 ```
 
 - 根目录 `.env.example` 必须声明所有上述输入/派生变量；实际 `.env` 是每个生成工程在 development/test 的唯一配置入口且不入 Git。staging/production 只允许从受控部署配置与 secret manager/Podman secret 注入同一 typed Settings 所需值，不得把生产秘密保存为仓库或服务器工作目录中的 `.env`。`compose.yml` 顶层使用 `name: ${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME is required}`，资源引用使用 `${VARIABLE:?message}`，禁止把本次实例的名称或端口复制成 YAML/string literal。
-- Context7/Compose 官方规则确认 project name 优先级为命令行 `-p`、`COMPOSE_PROJECT_NAME`、顶层 `name`、目录名。启动脚本和 CI 必须使用 `podman compose config`（provider 支持时同时检查 `config --environment`）验证最终插值值，并拒绝 `-p`/shell/`--env-file` 把 project name 覆盖为非 `rbac-sys` 的值。
+- Context7/Compose 官方规则确认 project name 优先级为命令行 `-p`、`COMPOSE_PROJECT_NAME`、顶层 `name`、目录名。启动脚本和 CI 必须使用 `podman compose config`（默认 `config --quiet`；需要最终插值时在进程内读取 `config`/`config --environment`，只输出 allowlist 脱敏摘要，禁止原文进入终端、CI artifact 或 diagnostics）验证最终插值值，并拒绝 `-p`/shell/`--env-file` 把 project name 覆盖为非 `rbac-sys` 的值。
 - Compose 禁止设置固定 `container_name`；network、volume、container、image、database、object-storage bucket/path 和日志标签全部读取已验证的派生变量，不能与同机其他工程共享。
 - Cookie 即使端口不同也可能互相覆盖，因此 Cookie 名必须来自派生变量；不得使用通用 `refresh_token`、`csrf_token`。localStorage/sessionStorage key 同样必须读取 `BROWSER_KEY_PREFIX`，不能在 TypeScript 中重复拼 slug。
-- 应用启动时校验 slug、数据库名、Redis prefix、Cookie 名、public origin 和端口非空、格式正确、彼此一致；生产错误 fail fast。生成 `scripts/check_template_values.py`，扫描受控源码/配置/项目文档，除本模板源文件的精确路径外，若发现双花括号占位符、模板示例词、未登记 literal host port 或资源名未通过配置读取，CI 失败。
+- 应用启动时校验 slug、数据库名、Redis prefix、Cookie 名、public origin 和端口非空、格式正确、彼此一致；生产错误 fail fast。生成 `scripts/check_template_values.py`，扫描受控源码/配置/项目文档，除通用模板源文件 `docs/prompts/rebuild-rbac-system-v1.md` 的精确路径外，若发现未解析模板参数、未登记 literal host port 或运行配置资源名绕过集中配置，CI 失败。模板参数检测使用明确参数名集合，不把合法 GitHub Actions/Jinja 表达式误判为占位符；身份输入块、派生说明、端口注册表和 `.env.example` 中与权威输入相符的值合法，错误示例词通过显式规则检查，不能禁止当前工程名称出现在全部文档中。
 - 后端只通过一个 typed Settings 模块读取环境变量，domain/use-case 不直接访问 `os.environ`；前端只通过一个经过 Zod 校验的 public runtime/build config 模块读取 `PROJECT_DISPLAY_NAME`、`BROWSER_KEY_PREFIX`、public origin 等非秘密值，组件不得直接访问散落的 `import.meta.env`。Nginx、Compose、maintenance、脚本和测试分别只有一个 config adapter，所有文档命令引用变量而非复制实际值；秘密绝不进入前端 public config。
 - “禁止硬编码”针对工程身份、资源 namespace、hostname、origin、宿主机端口、外部 URL、路径和环境差异；权限码、状态机、数据库约束、安全上限和协议版本等明确写入本契约的领域常量仍应由代码集中定义并测试，不能为了形式上的可配置而变成任意字符串。
 
@@ -117,14 +130,14 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 - 前端：Node.js 24 LTS、npm 11.x、React 19.x、TypeScript 6.x strict、Vite 8.x、React Router 7.x、TanStack Query 5.x、Tailwind CSS 4.x。
 - 前端表单与校验：React Hook Form 7.x + Zod 4.x；基础交互使用 Radix UI primitives，图标只使用 Lucide React；禁止再引入第二套组件库或图标库。
 - 前端测试：Vitest + React Testing Library + MSW 2.x；浏览器和黑盒 E2E 使用 Playwright Test。不得用 Enzyme、Cypress 或 Jest 建立第二套测试栈。
-- Playwright 的 npm package、lockfile 与 E2E 容器镜像版本必须严格相同；镜像使用实现当日核对的 `mcr.microsoft.com/playwright:v<exact-version>-noble@sha256:<digest>`，禁止 `latest`。浏览器及系统依赖在镜像构建/CI 准备阶段安装，应用容器启动时不得运行 `playwright install` 或访问公网。提供独立 `e2e` service/profile，加入内部网络、只读挂载测试 CA、不得发布宿主机端口；Linux Chromium 按官方建议提供足够共享内存（优先 `ipc: host`，受限环境使用经压测的 `shm_size`），CI 至少真实运行 Chromium 和 Firefox。若 package 与镜像版本不一致或浏览器 executable 缺失，测试必须在准备阶段失败并给出修复命令。
+- Playwright 的 npm package、lockfile 与 E2E 容器镜像版本必须严格相同；镜像使用实现当日核对的 `mcr.microsoft.com/playwright:v<exact-version>-noble@sha256:<digest>`，禁止 `latest`。浏览器及系统依赖在镜像构建/CI 准备阶段安装，应用容器启动时不得运行 `playwright install` 或访问公网。提供独立 `e2e` service/profile，按第 14 节共享 web-test 网络命名空间、只读挂载测试 CA、不得发布宿主机端口；Linux Chromium 按官方建议提供足够共享内存（优先 `ipc: host`，受限环境使用经压测的 `shm_size`），CI 至少真实运行 Chromium 和 Firefox。若 package 与镜像版本不一致或浏览器 executable 缺失，测试必须在准备阶段失败并给出修复命令。
 - API 类型：`openapi-typescript` + `openapi-fetch` 生成/消费契约；生成文件只输出到 `packages/api-client`，禁止手改。
 - 后端：FastAPI `>=0.115,<1`、Pydantic `>=2,<3`、SQLAlchemy `>=2,<3` asyncio、Alembic `>=1.13,<2`、asyncpg。
 - 后端基础依赖限定为 redis-py asyncio、HTTPX、PyJWT、pwdlib[argon2]、email-validator、`cryptography`（仅用于 Ed25519 备份签名/验证）；Phase 1 禁止引入 Celery、RQ、Kafka、RabbitMQ 或另一套 ORM。
 - 迁移：Alembic；禁止在应用启动时调用 `create_all()`。
 - 数据库：PostgreSQL 16.x 的最新安全 minor；不自动跨 major 升级。
 - Redis：Redis Open Source 8.2.x，用于限流、短期权限缓存和跨副本协调；Redis 故障不能导致权限错误放行。
-- RedisInsight：仅属于 development profile，使用官方 `redis/redisinsight` 镜像并锁定实现当日稳定 tag 与 digest，容器端口固定 5540，命名 volume 只挂载 `/data`，健康检查调用 `/api/health/`。它与 Redis 加入同一个内部网络，README 使用 service host `redis:6379` 说明首次连接；宿主机 UI 只能通过 `${DEV_BIND_ADDRESS}:${REDISINSIGHT_HOST_PORT}:5540` 访问。production/staging 禁止启用、发布或携带 RedisInsight 数据卷。
+- RedisInsight：仅允许用于 development 环境，Compose 使用 `debug` profile，使用官方 `redis/redisinsight` 镜像并锁定实现当日稳定 tag 与 digest，容器端口固定 5540，命名 volume 只挂载 `/data`，健康检查调用 `/api/health/`。它与 Redis 加入同一个内部网络，README 使用 service host `redis:6379` 说明首次连接；宿主机 UI 只能通过 `${DEV_BIND_ADDRESS}:${REDISINSIGHT_HOST_PORT}:5540` 访问。production/staging 禁止启用、发布或携带 RedisInsight 数据卷。
 - 密码：Argon2id，固定使用 `pwdlib[argon2]`；Context7 若无法解析 pwdlib，不得卡住实施或改用不相关库，直接查阅 pwdlib 官方文档/官方源码与发布元数据，把链接、版本和关键 API 记录到 `docs/toolchain.md` 后继续。
 - Token：PyJWT；access JWT + rotation refresh session。
 - 测试：Pytest 8.x + AnyIO pytest plugin（统一使用 `@pytest.mark.anyio`，不再并装 pytest-asyncio）、HTTPX AsyncClient、前端组件测试、Playwright Test、OpenAPI schema/coverage 检查。
@@ -171,6 +184,10 @@ rbac-sys/
   .gitignore
   .containerignore
   .env.example
+  pyproject.toml
+  uv.lock
+  package.json
+  package-lock.json
   frontend/                  # React SPA
   backend/                   # FastAPI API
   packages/
@@ -195,7 +212,7 @@ rbac-sys/
 
 规则：
 
-- Python 使用唯一 `uv.lock`；Node 选择并只保留一种 package manager 及 lockfile。
+- 本契约采用根 workspace：根目录提交 `pyproject.toml`、唯一 `uv.lock`、`package.json` 和唯一 `package-lock.json`；npm workspaces 包含 `frontend` 与 `packages/api-client`。Python 源码仍位于 `backend/app`，测试/类型检查通过根配置定位。所有固定命令从仓库根目录执行，不在子目录创建第二套 lockfile。
 - 前端不能 import Python 源码，后端不能读取前端源码；共享契约只能来自 OpenAPI 生成物。
 - API schema 改变但 `packages/api-client` 未更新时 CI 必须失败。
 - 根命令至少包含 `make dev/test/lint/typecheck/build/migrate/seed/ci`，CI 调用相同底层命令。
@@ -661,6 +678,9 @@ system.restore
 
 - 权限按多角色并集计算，默认拒绝；禁止根据 `role.name == "admin"` 放行。
 - 始终至少存在一个 active 的 super-admin 用户。
+- 特权身份判断基于不可修改的系统角色 `code=super_admin` 及数据库关联，不依赖显示名。非 active super-admin 调用者不得授予/撤销该角色，也不得通过管理员接口修改任何持有该角色的账户（包括非 active 账户）的资料、登录标识、密码、状态、角色或会话；统一返回 403 `PRIVILEGED_ACCOUNT_PROTECTED`。本人安全接口仍允许其修改自身密码/资料，最后管理员保护仍适用。
+- 非 super-admin 为用户创建或替换角色时必须拥有 `users.manage_roles`，目标角色的有效权限必须是调用者当前有效权限的子集；创建/修改角色权限也遵守该子集规则，且禁止修改调用者自身持有角色的权限或启用状态。停用角色重新启用时检查其完整权限集合，防止通过先分配后启用绕过检查。只有 `users.create` 不能携带任意角色：无 `users.manage_roles` 时仅允许系统 `user` 角色。越界统一 403 `ROLE_GRANT_FORBIDDEN`。
+- 上述判断与写入在同一事务校验数据库当前状态；角色权限、状态和成员变更必须遵循统一锁顺序，避免检查后并发变更绕过边界。super-admin 操作仍须具备 endpoint permission，且授予/撤销 super_admin、管理其他 super-admin 账户必须提交 `reauth_password` 进行本次密码验证（沿用认证限流），不能仅凭 UI 隐藏或长期 JWT 放行。
 - 用户不能停用或删除自己，不能撤销自己的最后一个 super-admin 身份。
 - 系统角色不能删除，code 不能修改。
 - `super_admin` 的启用状态和权限集合是核心不变量：该角色不能被停用或重命名，并且在任意时刻必须恰好包含权限目录中的全部权限。通用 `PUT /admin/roles/{id}/permissions` 命中 `super_admin` 时固定返回 409 `SYSTEM_ROLE_PERMISSIONS_IMMUTABLE`，即使调用者拥有 `roles.manage_permissions` 也不能删减或手工改写。
@@ -668,7 +688,7 @@ system.restore
 - 权限目录不能由普通 CRUD 创建、修改或删除。
 - 本项目权限码唯一规范是点号形式 `resource.action`，并由 `ck_permissions_code` 强制；这是新项目的有意约定，不兼容或自动转换旧项目的 `resource:action`。迁移旧授权时必须使用显式 mapping 并对未知 code fail closed，禁止同时支持两种分隔符。
 - 角色/权限变化后，在同一数据库事务中递增所有受影响用户的 `auth_version`；事务提交后 best-effort 清理 Redis cache。
-- Access JWT 带 `sub`、`jti`、`iss`、`aud`、`iat`、`exp`、`auth_version`，每次请求必须验证用户状态和版本。Redis 不可用时回查 PostgreSQL。
+- Access JWT 带 `sub`、`jti`、`iss`、`aud`、`iat`、`exp`、`auth_version`、`sid`，其中 `sid=refresh_sessions.family_id`，rotation 不改变 sid。每次已认证请求从 PostgreSQL 验证用户状态、auth_version 和该 family 的当前有效后继（未使用、未撤销、未过期且版本匹配）；Redis 仅缓存权限集合，不能用过期缓存替代这些即时撤销检查。已经开始的请求不追溯取消，撤销提交后开始的请求必须拒绝。
 
 ## 7. 认证与并发正确性
 
@@ -676,6 +696,7 @@ system.restore
 
 - Access JWT 有效期默认 10 分钟，仅存浏览器内存，不写 localStorage/sessionStorage。
 - Refresh token 为至少 256-bit 随机值，只通过配置 `REFRESH_COOKIE_NAME`（派生值 `rbac_sys_refresh`）、属性为 `HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth` 的 Cookie 传输，数据库只存 SHA-256 hash。
+- CSRF Cookie 固定 `Secure; SameSite=Lax; Path=/`，不设 Domain，供 SPA 读取；refresh Cookie 同样不设 Domain，清理时使用与签发一致的 Path。
 - 登录同时设置配置 `CSRF_COOKIE_NAME`（派生值 `rbac_sys_csrf`）的非 HttpOnly CSRF Cookie；`refresh/logout` 必须校验精确 Origin/Referer allowlist 和 double-submit CSRF header，并与 session 中的 CSRF hash 比对。不得仅依赖 CORS。
 - 生产和本地浏览器开发均使用 HTTPS，refresh Cookie 始终 `Secure=true`。只有不启动真实网络监听的后端 unit/integration test transport 可通过 test-only setting 构造 Cookie，任何 Compose、Playwright、smoke 或人工浏览器 profile 都不得关闭 Secure。
 - 登录、刷新、修改密码、管理员重置密码、停用用户都生成 login/action history，且不泄露敏感字段。
@@ -725,7 +746,13 @@ system.restore
 4. 创建同 family 的新 session，旧行设置 `used_at` 和 `replaced_by_session_id`。
 5. 提交后才返回新的 access token 和 refresh cookie。
 
-两个并发 refresh 使用同一 token 时只能有一个成功；另一个必须触发 reuse 策略，不能产生两个有效后继 token。
+两个并发 refresh 使用同一 token 时只能有一个成功；另一个必须触发 reuse 策略，不能产生两个有效后继 token。reuse 分支必须提交撤销和事件后再返回 401，不能因抛出异常而回滚；步骤 2 的 used/replaced 检查进入步骤 3，而不是提前返回普通失败。
+
+会话列表按 `family_id` 聚合，一个浏览器登录只展示一条会话；响应 `id` 与 DELETE `/me/sessions/{id}`、`/admin/sessions/{id}` 的 id 均为 family UUID，`current` 由 access JWT 的 sid 判断。撤销 family 必须撤销其全部行并使对应 access token 立即失效，其他 family 不受影响；logout 使用 refresh cookie 定位 family，并校验 CSRF/Origin，不要求尚未过期的 access JWT。
+
+前端刷新协调必须覆盖同源多个标签页：使用由 `BROWSER_KEY_PREFIX` 派生名称的 Web Locks 独占锁；锁内重新读取最新 CSRF Cookie 后才发送 refresh，禁止排队前缓存 Cookie/header。各标签页可依次 rotation 获取仅存本标签页内存的 access token，旧 access 的 sid 在正常 rotation 后仍有效。BroadcastChannel 仅发送退出/身份切换通知，不广播 token；登录、退出与刷新共用锁，并用内存 generation 防止迟到响应恢复旧身份。网络超时造成 rotation 结果未知时不自动重试旧凭据，清理本地状态并要求重新登录。缺少跨标签页协调能力时显示明确的不受支持提示，不静默退回仅单标签页锁。
+
+本人改密固定采用全部退出：在同一事务更新密码历史、清除 `must_change_password`、递增 `auth_version/row_version` 并撤销全部 family；提交后返回 204、清理 refresh/CSRF Cookie。前端清空内存 token、账户查询缓存并通知其他标签页退出，转到登录页；改密接口不签发新 token。
 
 ### 数据库与请求并发
 
@@ -777,8 +804,8 @@ signature.ed25519   # Ed25519 私钥对两个成员的精确字节签名
 
 API 只创建 `backup_artifacts(status='pending')` 并返回 202；maintenance worker 执行：
 
-1. 获取互斥 lease，检查目标空间/对象存储可写，创建权限为 0600 的临时目录和 `.partial` 文件。
-2. 使用与服务器相同 major 的 PostgreSQL client 执行等价命令：
+1. 获取互斥 lease，检查目标空间/对象存储可写，创建权限为 0700 的临时目录，其中 `.partial`、临时 passfile 和其他秘密文件权限为 0600；目录必须具备 owner 的搜索/执行权限。Windows 宿主机辅助文件使用仅当前用户可访问的 ACL，不能把 POSIX mode 当作 Windows ACL 验证。
+2. worker 从 typed Settings/secret adapter 配置 libpq 的非秘密连接项 `PGHOST/PGPORT/PGDATABASE/PGUSER`，通过 `PGPASSFILE` 指向上述 0600 临时 passfile；生产同时传递受信 TLS 参数。密码由进程内安全写入 passfile，正确转义 `:` 与反斜线，不能经 shell 插值写入或打印。使用与服务器相同 major 的 PostgreSQL client 执行等价命令：
 
 ```bash
 pg_dump \
@@ -787,7 +814,7 @@ pg_dump \
   --no-owner \
   --no-privileges \
   --file=database.dump \
-  "$DATABASE_URL"
+  --no-password
 ```
 
 3. 必须检查进程 exit code；不得使用 `--no-sync`。失败删除 partial，记录脱敏错误，不生成 completed artifact。
@@ -795,7 +822,7 @@ pg_dump \
 5. 生成 manifest、checksum 和 Ed25519 signature，打包后再次校验，再原子 rename/upload，最后把数据库状态改为 completed。
 6. 备份过程中 `pg_dump` 的一致性快照允许应用继续读写；不得为了备份长时间全站停机。
 
-数据库 URL 不出现在 shell 日志或进程错误详情中；使用 libpq 环境/临时 passfile 并确保最小文件权限。maintenance image 固定安装 PostgreSQL 16 client，不依赖宿主机碰巧存在的 `pg_dump`。
+数据库 URL、密码不能进入 argv、shell trace、日志或进程错误详情；不得把含密码 URI 传给 `pg_dump/pg_restore/psql`。优先临时 passfile，不以 `PGPASSWORD` 作为默认替代；退出、异常和取消都关闭连接并删除 passfile/partial，保留范围受控的失败状态。maintenance image 固定安装 PostgreSQL 16 client，不依赖宿主机碰巧存在的 `pg_dump`。
 
 ### 导入与恢复流程
 
@@ -876,7 +903,7 @@ ADR 只定义接口、状态机和约束，不创建 job 表、worker 空壳或�
 
 所有响应不得返回 `password_hash`、token hash 或内部敏感 metadata。
 
-固定公共 DTO；字段不得由执行者随意改名：
+固定公共 DTO；字段不得由执行者随意改名。涉及 super-admin 保护动作时，请求额外接受 `reauth_password`（string[1..128]，仅验证调用者密码，不写入幂等响应、日志或审计）；DELETE 使用 JSON body。OpenAPI 必须表达该字段及条件必填规则：
 
 ```text
 LoginRequest      = {identifier: string[1..320], password: string[1..128]}
@@ -931,7 +958,7 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 | POST | `/auth/reset-password` | Public + one-time token | 204 | 修改密码、撤销会话、token 单次消费 |
 | POST | `/auth/login` | Public | 200 | body: identifier/password；返回 access token + user，设置 refresh cookie |
 | POST | `/auth/refresh` | Refresh cookie | 200 | rotation |
-| POST | `/auth/logout` | Authenticated | 204 | 撤销当前 refresh family/session 并清 cookie |
+| POST | `/auth/logout` | Refresh cookie + CSRF/Origin | 204 | 撤销当前 refresh family/session 并清 cookie |
 | POST | `/auth/logout-all` | Authenticated | 204 | 撤销用户全部 session，auth_version +1 |
 | GET | `/auth/me` | Authenticated | 200 | 身份、Profile、Preferences、角色、权限、版本；登录后的偏好权威来源 |
 | POST | `/auth/confirm-email-change` | Public + one-time token | 204 | 确认目标邮箱、撤销全部会话；不可枚举 |
@@ -939,7 +966,7 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 | POST | `/me/change-username` | Authenticated + current password | 204 | 修改 username、撤销全部会话、要求重新登录 |
 | POST | `/me/change-email/request` | Authenticated + current password | 202 | 向新邮箱发确认、向旧邮箱发安全通知 |
 | GET/PATCH | `/me/preferences` | Authenticated | 200 | 读取/部分更新本人偏好；带 preference row_version |
-| POST | `/me/change-password` | Authenticated | 204 | current/new password；撤销其他 session |
+| POST | `/me/change-password` | Authenticated | 204 | current/new password；撤销全部 session、清 Cookie，重新登录 |
 | GET | `/me/sessions` | `sessions.read_own` | 200 | 当前用户会话，标明 current |
 | DELETE | `/me/sessions/{id}` | `sessions.revoke_own` | 204 | 只能撤销本人 session |
 | GET | `/me/login-history` | `login_history.read_own` | 200 | 只能读取本人记录 |
@@ -1108,17 +1135,17 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `AUTH-005` Given 合法 refresh，When refresh，Then 旧 session used、新 session 同 family、cookie 被轮换。
 - `AUTH-006` Given 同一 refresh token 两个并发请求，Then 最多一个正常 rotation，另一个触发 reuse，family 被撤销，不存在两个可继续刷新的后继 token。
 - `AUTH-007` Given 已 logout session，When 再 refresh，Then 401，cookie 清理。
-- `AUTH-008` Given 修改密码，Then 密码 hash 改变、auth_version +1、其他 session 撤销、旧 access token 失效。
+- `AUTH-008` Given 修改密码，Then 密码 hash 改变、auth_version +1、全部 session 撤销、旧 access token 失效、Cookie 清理、重新登录。
 - `AUTH-009` Given 登录频率超过阈值，Then 返回 429 + Retry-After；Redis 故障时执行文档规定的安全降级。
 - `AUTH-010` Given 缺失/错误 CSRF header 或不受信任 Origin，When refresh/logout，Then 403 且 session 状态不改变。
 - `AUTH-011` Given 同一 active 用户连续 10 次密码错误且未先触发外层限流，Then 原子设置 15 分钟锁、内部记录 account_locked、外部保持通用 401；到期后自动清零，成功登录也清零。
 - `AUTH-012` Given Redis 限流已命中，When 登录，Then 先返回 429 + Retry-After 且不继续账户验证；Given Redis 故障，Then 公共认证入口统一返回 503 + Retry-After、readiness degraded，多 API replica 下不得 fail-open 或使用进程内计数。
-- `PWD-001` Given 已登录用户，When current password 正确且新密码符合策略，Then 改密成功、旧密码失败、新密码成功、历史 hash 记录、其他 session 撤销。
+- `PWD-001` Given 已登录用户，When current password 正确且新密码符合策略，Then 改密成功、旧密码失败、新密码成功、历史 hash 记录、全部 session 撤销、返回 204 并重新登录。
 - `PWD-002` Given current password 错误、弱密码或复用最近 5 个密码，When change，Then 拒绝且 hash/session 不改变。
 - `PWD-003` Given 存在或不存在 email，When forgot-password，Then 均返回相同 202；存在账户只保存 token hash 并由 fake inbox 收到链接。
 - `PWD-004` Given 有效 reset token，When reset，Then token consumed、密码改变、auth_version +1、全部 session 撤销；再次使用失败。
 - `PWD-005` Given 管理员 reset password，Then 临时密码被 hash、must_change_password=true、全部 session 撤销并写 action history。
-- `PWD-006` Given must_change_password 用户已登录，When 访问非 allowlist API，Then 403 `PASSWORD_CHANGE_REQUIRED`；完成改密后恢复其 RBAC 权限。
+- `PWD-006` Given must_change_password 用户已登录，When 访问非 allowlist API，Then 403 `PASSWORD_CHANGE_REQUIRED`；完成改密后全部退出，重新登录后恢复其 RBAC 权限。
 
 ### Profile 与 Preferences
 
@@ -1152,11 +1179,14 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `RBAC-014` Given 只有 `users.update` 而无 `users.activate`，When activate suspended 用户，Then 403；拥有 `users.activate` 时只能执行 suspended → active，不能恢复 deleted/rejected 用户或清除临时凭据锁。
 - `RBAC-015` Given 用户被软删除，Then 原 username/email 已被唯一 tombstone 替换、敏感值不进入审计；When 使用原标识重新注册，Then 创建新 UUID 的账户。并发删除/注册不得留下重复 active/pending 标识。
 
+- `RBAC-016` Given 非 super-admin 拥有 users.create/manage_roles/reset_password/update，When 自授 super_admin、创建携带 super_admin 的用户或修改任意 super_admin 账户，Then 403 且无状态变更；授权集合超过自身权限、编辑自身角色、分配后启用越权角色也被拒绝。
+- `RBAC-017` Given active super-admin，When 管理特权账户但 reauth_password 缺失/错误，Then 拒绝；有效重新认证仍不能破坏最后管理员不变量。并发角色权限变更与授予不能绕过子集检查。
+
 ### 幂等、会话和历史
 
 - `CON-001` Given 相同 actor/endpoint/key/hash 的两个并发管理写请求，Then 业务副作用只发生一次，重放得到相同结果或 processing 响应。
 - `CON-002` Given 相同 key 但不同 request hash，Then 409，原结果不被覆盖。
-- `SES-001` Given 用户撤销自己的其他 session，Then 204，该 session 不能 refresh。
+- `SES-001` Given 用户撤销自己的其他 family，Then 204，该 family 的 access/refresh 均不可用，本 family 仍有效；旧 rotation 行 id 不能作为另一条可绕过的会话。
 - `SES-002` Given 用户撤销他人 session，Then 403。
 - `HIS-001` 每种登录事件字段符合表约束，未知用户失败登录允许 user_id NULL。
 - `HIS-002` 关键管理动作产生一条 action history，actor/target/result/request_id 正确。
@@ -1230,10 +1260,13 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `FE-014` Public/Account/Admin 三个 layout 在全部 palette 的 light/dark/high contrast/forced-colors 下通过 axe、程序化 contrast 和关键视觉回归；Admin 在所有组合持续显示明确侧栏和 ADMIN 标识。
 - `FE-015` high contrast、comfortable/compact、reduced motion 都改变真实 UI；OS reduced-motion 始终胜出，Preferences 保存 409/网络失败时预览回滚并可重试。
 
+- `FE-016` Given 同一 browser context 中两个标签页 access 过期，When 同时请求 API，Then refresh 串行完成、无误判 reuse、两页均可继续访问；一页退出/改密后另一页清空身份，迟到响应不得恢复登录。rotation 响应丢失时不得自动重放旧 token。
+- `SES-003` Given 正常 rotation，Then sid 不变、会话列表仍只有一条；Given family 撤销或到期，Then 旧 access 立即被拒绝，即使 Redis 中仍有权限缓存。
+
 ### 部署与并发烟雾测试
 
 - `CFG-001` Given 任一必填模板输入缺失、格式非法、派生值超 PostgreSQL/Cookie/Compose 长度限制或端口重复/越界，When 开始生成或启动，Then 在写业务文件/启动容器前 fail fast，并一次性列出全部错误。
-- `CFG-002` Given 一组合法输入完成生成，When 运行 `check_template_values.py`，Then 除本模板源文件精确路径外，受控文件中不存在双花括号占位符、模板示例工程名、未登记 literal host port、通用 Cookie 名或绕过集中配置自行拼接的 namespace/origin；删除/移动模板文件后检查范围不会意外变化。
+- `CFG-002` Given 一组合法输入完成生成，When 运行 `check_template_values.py`，Then 除通用模板源文件 `docs/prompts/rebuild-rbac-system-v1.md` 精确路径外，受控文件中不存在未解析模板参数、错误模板示例工程名、未登记 literal host port、通用 Cookie 名或绕过集中配置自行拼接的 namespace/origin；删除/移动模板文件后检查范围不会意外变化。
 - `CFG-003` Given 同一模板分别使用 A/B 两组 project identity、数据库、Cookie、Redis、镜像、备份扩展名和端口，When 渲染并检查 Compose/config，Then 两组资源完全隔离、应用行为与 OpenAPI 相同，且任何一组都不包含另一组标识。
 - `CFG-004` Given shell、`--env-file` 或 `-p` 尝试覆盖本次 `COMPOSE_PROJECT_NAME`，When 启动/config check，Then 一致值可运行，非本次 `PROJECT_SLUG` 的值被明确拒绝；CI 保存脱敏的最终插值摘要作为证据。
 
@@ -1250,6 +1283,23 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `DEP-010` staging 执行证书/CA 轮换测试，Then 无镜像重建即可加载新材料、旧连接有界退出、健康检查恢复；到期阈值触发告警且日志不包含私钥/token。
 - `DEP-011` Given dev CA 已信任且 dev Compose 启动，When Playwright/smoke 访问配置 `DEV_PUBLIC_ORIGIN`，Then hostname/chain 校验成功、Secure Cookie/CSRF/Origin 正常、Vite HMR 通过 WSS；Vite/API 无宿主机 published port，HTTP 或绕过 Nginx 的浏览器访问失败。
 
+- `DEP-012` Given 专用 e2e 容器，Then Chromium/Firefox 均通过同一 DEV_PUBLIC_ORIGIN 完成可信 TLS 与登录；错误 CA/SAN 必须失败，新增测试 listener 未发布宿主机且 production 不存在。
+- `DEP-013` Given 本工程已运行且配置相同，When 再次 dev-up，Then 成功且数据不变；外部进程/其他工程/错误绑定占用登记端口时明确失败，不杀进程、不改端口。
+- `DEP-014` Given 安装 rootless Quadlet 并满足 linger 前置条件，When daemon-reload/start 与主机重启，Then unit 自动启动且 HTTPS smoke 通过；不对生成 service 执行 enable。
+
+- `DEP-015` Given 实际 provider 启动，When 手工运行 API/maintenance healthcheck，Then exit=0 且容器 healthy；注入探针参数错误或依赖超时必须失败，不能只检查 Up。
+- `DEP-016` Given 上游 API/frontend 被重建且地址变化，Then 网关在规定 deadline 内恢复页面/API/WSS，无持续旧 IP 502；测试容器不阻塞测试网关受控重建。
+- `DEP-017` Given PostgreSQL 暂时不可用，Then readiness 有界失败、worker 安全退避；恢复后可继续领取新任务，不重复执行失去 lease 的恢复任务，取消退出可完成。
+- `DEP-018` Given 重复运行 E2E 或轮换测试 CA，Then Chromium/Firefox 的真实 profile 非交互初始化并通过 canary，旧/错误 CA 仍被拒绝。
+- `DEP-019` Given 开发库管理员已改密且有开发数据，When 完整 E2E/smoke 写流程，Then 仅访问测试数据库/Redis/邮件，开发数据、密码与限流状态不变；最终目标误指开发/生产时在首次写入前拒绝。
+- `DEP-020` Given 配置检查和备份执行中注入 canary secret，Then argv、终端、CI artifact 与异常日志不含 canary；目录 0700、passfile 0600 可用，成功/失败/取消后临时秘密文件被清理。
+- `DEP-021` Given 默认开发、调试、数据库测试、完整 E2E、日志专项测试及单机生产配置，Then 服务集合与第 14 节拓扑表精确一致，数量按生命周期计算；默认开发恰好 7 个，默认不启动一次性任务，生产无开发/测试服务。
+- `DEP-022` Given 同一配置连续启动两次和一次失败后重试，Then project/service、卷身份保持一致，不增加副本；额外/未知资源只报告、不自动删除。
+- `DEP-023` Given E2E 成功、失败或取消，Then 本次执行器/helper 被清理，本次启动的专用测试服务按所有权停止，开发服务及原有数据卷不变；拓扑文档、JSON 清单与真实 provider/Quadlet 无漂移。
+- `DEP-024` Given 干净宿主机尚未信任开发 CA，Then 启动诊断准确报告信任未完成；证书签发、容器 healthy 或指定 CA 的请求成功不能使该项通过。使用同一 CA 安装信任并重启目标浏览器后，实际 HTTPS 登录页无证书警告；系统与浏览器结果分别记录。
+- `DEP-025` Given CA 安装权限被拒绝、CAROOT 不匹配、旧服务端证书或 CA 轮换，Then 明确报告对应阶段且不绕过验证；重复安装/签发保持幂等，轮换后新链通过、旧链在隔离信任验证中失败。撤销验证在专用测试信任库进行，不删除开发者共享 CA。
+- `CFG-005` Given 模板和实例升级，Then 参数展开除明确标题/实例说明外完全一致；两份版本及 README 一致，所有新增编号唯一，验证报告不能把未执行/环境受限项计入通过。
+
 ## 14. Nginx 与云部署基线
 
 ### Nginx
@@ -1261,11 +1311,13 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - HTTP→HTTPS redirect 的目标从受信 `PUBLIC_ORIGIN` 配置生成，不能拼接客户端可控的 `Host`。单机生产非标准端口必须从该 origin 得到准确目标；云端标准 443 不附加内部端口。本地开发不发布额外 HTTP redirect 端口，直接使用 `DEV_PUBLIC_ORIGIN`。
 - Nginx 终止 TLS 时必须正确设置 `X-Forwarded-Proto=https`；应用只接受来自显式 trusted proxy CIDR 的 forwarded headers。若反向代理到 HTTPS upstream，必须启用 upstream hostname/SNI 和 CA 校验（等价于 `proxy_ssl_server_name on; proxy_ssl_verify on; proxy_ssl_trusted_certificate ...`），禁止“加密但不验身份”。
 - 传递并规范化 `Host`、`X-Real-IP`、`X-Forwarded-For`、`X-Forwarded-Proto`、`X-Request-ID`。
-- 应用只信任显式 proxy CIDR；不能无条件相信公网客户端传来的 forwarded headers。
+- 应用只信任受控部署输入中的显式 proxy IP/CIDR；只包含必要网关 peer/专用代理网络，禁止 `*` 或把混合服务网络整体视为可信。Nginx 在单跳边界覆写客户端传入的 forwarded headers；多跳边界明确每一跳信任与解析顺序。
+- Uvicorn 的 `forwarded-allow-ips` 不会把 `web` 等 hostname 自动解析为可信 IP。不能仅填 service name 就宣称配置生效；采用静态 IP/CIDR、部署层生成允许列表或经 ADR 说明的受控解析适配时，都必须验证容器地址变化、DNS 失败、重复/畸形头及非网关 peer 伪造。自定义适配要禁用重复的框架代理头处理，不得扩大上述信任边界。
 - 配置合理的 `client_max_body_size`、header/body timeout、upstream connect/read/send timeout。
 - RBAC 普通 API 使用短 timeout；未来 SSE/WebSocket/长任务状态接口使用单独 location，不把全站 timeout 调成数小时。
 - WebSocket 预留正确的 HTTP/1.1 Upgrade/Connection 配置；SSE location 关闭不合适的 proxy buffering。
 - 静态带 hash 资源使用长期 immutable cache；`index.html` 不长期缓存。
+- 上游 API/frontend 容器重建后必须能重新解析地址。按锁定 Nginx 版本配置受信 resolver、DNS TTL 与可用的动态 upstream 能力，或由生命周期脚本在上游就绪后受控 reload/recreate 网关；不能只因 service name 相同就假定不会保留旧 IP。不要照搬包含商业模块的示例，实际重建后必须验证页面、API 与 WSS 不持续返回 502。
 - 添加 HSTS（仅全站 HTTPS 后）、nosniff、referrer policy、frame ancestors/CSP 等安全头；CSP 按实际资源最小化。
 - 登录限流以应用/Redis 为权威，可在 Nginx 加粗粒度防护，但不能因多 Nginx 副本产生错误安全假设。
 - 不缓存认证接口、`/auth/me` 或任何管理 API 响应。
@@ -1282,8 +1334,44 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - 备份上传、下载和跨实例迁移的网络传输必须走 HTTPS/TLS；Ed25519 负责真实性与完整性，SSE-KMS/磁盘加密负责静态数据，两者都不能替代 TLS。
 - 本地完整栈的唯一浏览器入口为配置 `DEV_PUBLIC_ORIGIN=https://rbac-sys.localhost:31443`，由 Nginx 使用本地受信 CA 证书终止 TLS；不再提供浏览器可访问的 HTTP profile 或直连 Vite host port。Nginx→Vite/API、API→本地 PostgreSQL/Redis 可在同机专用 Compose bridge 内使用明文协议，但这些内部端口不得发布到 LAN。staging 必须与 production 使用相同 TLS 强制策略。
 - 提供 `scripts/dev-certs.ps1` 与 `scripts/dev-certs.sh`，使用 mkcert 为已校验的 `DEV_HOSTNAME` 创建 SAN 开发证书；只有当配置显式列出额外 `DEV_CERT_SANS` 时才加入其他 hostname/IP，不能在脚本中写死本机名称。脚本必须幂等、显示将修改的 trust store，并提供撤销说明。CA 私钥、leaf 私钥和生成证书全部 Git ignored，Nginx 只读挂载 leaf certificate/key；只允许把测试所需的公开 CA certificate 复制到临时测试环境。
+
+#### 本机 CA 信任与 Certificate Error 应对（首次启动必需）
+
+证书文件存在、容器 healthy、`curl --cacert` 成功或容器 E2E 通过，均不能证明开发者的宿主机浏览器已经信任 CA。生成工程必须把“签发 → 本机信任 → 部署证书 → 实际浏览器验证”作为可观察的独立阶段，不能在只完成签发时输出“HTTPS 已就绪”。
+
+1. **核对 CA 身份**：使用本次签发所用的 mkcert 二进制、用户和 `CAROOT`。`mkcert -CAROOT` 定位 CA；比较项目公开 `rootCA.pem` 与该目录公开根证书的 SHA-256 指纹，验证 leaf 的签名链、有效期与 `DEV_HOSTNAME` SAN。不能只比较 issuer 文本，也不能用另一个用户或默认 CAROOT 中的新 CA 去“修复”旧证书。只读取公开证书作诊断，不输出或复制 `rootCA-key.pem`。
+2. **安装本机信任**：dev-certs 入口必须在实际运行浏览器的宿主机调用 `mkcert -install`，显示 CA 指纹、目标信任库及所需系统权限，并检查退出状态。安装到 Podman VM 或测试容器不等于安装到宿主机。需要系统授权时使用系统正常授权流程；已有明确授权不重复询问。权限拒绝、缺少信任库工具或策略禁止时，明确标记“本机 CA 信任未完成”，提供同一 CAROOT 的人工修复步骤，不假报成功。
+3. **覆盖实际浏览器**：Windows/macOS/Linux 的 README 分别说明系统信任库和浏览器/NSS 的差异；按实际 mkcert 与浏览器版本列出依赖和操作方法。`TRUST_STORES` 可以限定 `system`、`nss` 等目标，脚本必须记录实际选择，不能静默跳过目标浏览器。安装后完全退出并重新启动目标浏览器；Firefox/NSS 依赖缺失须给出对应平台安装方法。内嵌浏览器或独立 profile 单独验证，不从系统浏览器结果推断其已通过。
+4. **验证部署和访问**：将匹配的 leaf/key 同步给 Nginx 后，核对服务端实际返回的证书指纹与本地期望一致。宿主机使用正常信任链访问 `DEV_PUBLIC_ORIGIN`，再用实际浏览器打开登录页，确认无 Certificate Error、安全警告或手工例外。系统 curl、包管理器 curl、Python/Node 可能使用不同 CA 来源，须记录客户端/TLS 后端并分别判定；一次 curl 失败或成功不能替代所有浏览器结果。未能实际验证的浏览器写“未验证”。
+5. **重复运行和撤销**：已正确受信的同一 CA 不应每次重新创建；SAN/有效期变化可在同一 CA 下重签 leaf，真正轮换 CA 时更新所有使用方信任并清除旧信任。README 提供 `mkcert -uninstall`，使用安装时相同 CAROOT 与目标信任库；先列明依赖该 CA 的其他本机项目，避免误撤共享信任。卸载信任不等于删除 CA 文件，普通 stop/down 不撤销信任或删除 CA。
+
+README 必须给出以下命令的 Windows PowerShell 与 macOS/Linux 等价用法，并明确 `mkcert` 应替换为已检测的实际路径；若使用自定义 CAROOT，安装、签发与撤销必须显式保持相同配置。以下命令执行前完成上述身份核对，撤销命令只列在独立卸载流程，不串入启动脚本：
+
+```sh
+# 在实际运行浏览器的宿主机执行；此命令只显示 CA 目录
+mkcert -CAROOT
+# 安装签发当前站点证书的 CA；可能触发操作系统授权
+mkcert -install
+```
+
+| 现象 | 判定与修复 |
+|---|---|
+| 默认访问报 unknown issuer / authority invalid / NOT_TRUSTED，指定正确公开 CA 后成功 | 排查对应客户端信任库是否缺少该 CA；完成宿主机/目标浏览器安装并重启后复测 |
+| 安装后仍报不受信任 | 比较 CA 指纹、用户/CAROOT、浏览器 profile 和服务端证书；确认信任安装退出状态，禁止盲目反复生成 CA |
+| hostname mismatch 或证书过期/尚未生效 | 核对 SAN、DEV_HOSTNAME、系统时间与有效期，重签并同步证书，确认 Nginx 已加载新证书 |
+| connection refused / DNS 失败 | 先检查解析、端口和 web 服务；这类故障不能归因为 CA 信任 |
+| 容器 E2E 通过、人工浏览器失败 | 分别检查容器与宿主机信任库；测试通过不代表人工访问就绪 |
+
+`curl --cacert` 仅用于定位证书链问题或明确使用专用 CA 的测试，不能冒充默认信任验收；禁止把 `curl -k`、`verify=False`、`ignoreHTTPSErrors=true`、关闭浏览器校验或点击继续访问作为修复办法。生成 `docs/runbooks/tls.md` 中的本机 CA 小节，并在启动结果分别记录证书签发、系统信任、目标浏览器验证状态及证据，不记录秘密。
+
+#### 开发代理与隔离测试证书
+
 - Vite 本身保持内部 HTTP，不安装 `@vitejs/plugin-basic-ssl`，避免形成另一条与生产不同的 TLS 终止路径。开发 Nginx 必须代理 Vite 页面和 HMR WebSocket；Vite 的 internal host/port 由集中配置提供，`strictPort=true`，HMR client 从 `DEV_HOSTNAME/WEB_DEV_TLS_HOST_PORT` 生成 `wss` 地址，禁止 WebSocket 失败后绕过 Nginx 直连未发布端口。镜像标准 internal port 可有集中默认值，但不得与宿主机端口或 project namespace 混用。
 - `.env.example`、CORS/Origin allowlist、CSRF Origin 校验、邮件链接、Playwright `baseURL` 和 smoke URL 必须统一读取 `DEV_PUBLIC_ORIGIN`，不得各自拼 hostname/port。本地也保持 refresh Cookie `Secure=true`；不得通过 `ignoreHTTPSErrors=true` 掩盖证书问题，开发机/CI 必须显式信任测试 CA 并验证 hostname。
+- E2E 使用独立 `web-test/api-test/frontend-test` 服务；会改变数据的维护流程使用 `maintenance-test`。服务、network、volume 名从 `RESOURCE_PREFIX` 派生，测试 API/worker 只连接测试 PostgreSQL、测试 Redis 和测试 Mailpit，不重配或重启开发 API/web 来切换数据库。测试 Redis 使用独立服务/volume，并保留按 environment 派生的 key namespace；测试邮件不得进入开发收件箱。测试应用不发布额外宿主机端口。
+- E2E 仍通过 Nginx 并保持 `DEV_PUBLIC_ORIGIN` 的 hostname、port 和 Cookie/Origin 语义：e2e 使用 `network_mode: service:web-test`（不同时声明 networks/ports），web-test 增加仅监听其命名空间 `127.0.0.1:${WEB_DEV_TLS_HOST_PORT}` 的 TLS listener。浏览器将 `DEV_HOSTNAME` 解析到该 loopback，使用测试 CA 签发的匹配 SAN 证书；不得假定 Node CA 配置等同浏览器信任。测试 listener 不发布宿主机，开发 web 的监听与代理目标保持不变；production 不包含上述测试服务。真实 Podman provider 必须验证 service 网络共享和 hostname 解析。
+- `scripts/run_e2e.py` 为跨平台编排入口：检查最终测试配置与数据库身份，构建匹配浏览器镜像、启动独立依赖、执行 `migrate-test/seed-test`、创建受控测试账户、等待 HTTPS canary，再以 `run --rm --no-deps` 执行浏览器。fixture 密码随机生成且不进入 argv/日志；不得依赖 `BOOTSTRAP_ADMIN_PASSWORD` 在开发库中仍有效。失败也要收集脱敏报告并清理本次 fixture/临时容器，禁止泛化 prune 或删除开发卷。重建 web-test 前先关闭共享其命名空间的测试容器。
+- E2E CA 准备必须分别覆盖容器操作系统信任库、运行浏览器用户所使用的 Chromium 信任库与 Firefox profile 的受信根设置；具体导入命令按锁定浏览器版本验证并记录。首次及重复启动均须非交互；已存在的信任库不能重复执行会索要密码的初始化，测试用户/profile 更换或 CA 轮换时更新对应公开根证书。公开 CA 只读挂载，信任库/profile 在临时可写目录初始化，不挂载 CA 私钥。`NODE_EXTRA_CA_CERTS` 只解决 Node 侧信任，不能当作两个浏览器已信任的证据；两个浏览器必须在 `ignoreHTTPSErrors=false` 下先运行 HTTPS canary，错误 CA/错误 SAN 也必须失败。
 - `docs/runbooks/tls.md` 必须包含证书签发/续期/轮换、CA bundle 轮换、到期告警、私钥泄漏处置、HSTS 渐进启用与回滚。HSTS 只有在整个域名确认 HTTPS 后启用，不能未经评估直接加入 preload。
 
 ### 后端、Nginx 与前端日志管理
@@ -1360,9 +1448,57 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - Phase 1 不在 RBAC 管理控制台新增原始运行日志浏览/下载页面，也不允许管理员从应用 API 任意查询 Collector 或 bucket；运维通过受限日志平台/IAM 查询，安全审计页面仍只展示经过业务授权和脱敏的 login/action history。
 - 提交 `docs/observability/log-schema.md`、`docs/runbooks/log-pipeline.md` 和 `docs/runbooks/log-archive-restore.md`，分别定义字段/schema version、采集故障/敏感数据处置、日次归档与恢复。`.env.example` 至少给出 `LOG_LEVEL`、`LOG_LEVEL_OVERRIDES`、`DEBUG_LOG_EXPIRES_AT`/原因、本地 rotation size/file count、hot/archive/audit retention days、archive bucket/prefix、export lag alert threshold；真实 endpoint、KMS key 和凭据只来自 secret manager/IaC。
 
+### 服务拓扑、数量与生命周期（强制生成契约）
+
+Compose project 是应用资源分组，不是嵌套容器；不得为了界面分组另加包装容器或 Pod。以下数量按单副本、已完成初始化的运行服务计算，不含镜像、network、volume、Pod infra 容器、已退出任务或瞬时构建步骤。九个宿主机登记端口不等于九个必须常驻的容器。不得擅自增删、合并、改名或复制服务；变更必须先更新本表、ADR、启动脚本和验收预期。
+
+| 固定 service key | 用途及停用影响 | 环境 / Compose profile | 生命周期 |
+|---|---|---|---|
+| `web` | Nginx HTTPS 入口；停止后浏览器入口不可用 | dev/prod；无 profile | 常驻，1 个 |
+| `frontend` | Vite 开发页面与 HMR；停止后开发页面不可用 | dev；无 profile | 常驻，1 个；prod 静态产物由 web 提供 |
+| `api` | 认证、RBAC、会话和审计接口 | dev/prod；无 profile | 常驻，1 个 |
+| `postgres` | 业务数据库，承载持久业务数据 | dev/prod；无 profile | 常驻，1 个 |
+| `redis` | 认证限流等依赖；不是可随意关闭的缓存 | dev/prod；无 profile | 常驻，1 个 |
+| `maintenance` | 备份/恢复任务及过期数据清理；停止后相关任务无法正常推进 | dev/prod；无 profile | 常驻，1 个 |
+| `mailpit` | 开发邮件收件箱，用于验证、重置密码等流程 | dev；无 profile | 完整开发常驻，1 个；prod 使用真实邮件服务 |
+| `postgres-test` | 自动化测试专用数据库，不连接开发数据卷 | dev/test；`test` | 按需，1 个 |
+| `redisinsight` | Redis 管理 UI；应用不依赖它 | dev；`debug` | 按需，1 个 |
+| `redis-test` | 隔离测试限流和 Redis 数据 | test；`test` | 测试期间，1 个 |
+| `mailpit-test` | 隔离测试邮件 | test；`test` | 测试期间，1 个 |
+| `api-test` | 连接测试依赖的后端 | test；`test` | E2E 期间，1 个 |
+| `frontend-test` | 测试前端，只经 web-test 访问 | test；`test` | E2E 期间，1 个 |
+| `web-test` | 测试 HTTPS 入口及浏览器共享网络命名空间 | test；`test` | E2E 期间，1 个 |
+| `maintenance-test` | 测试备份/恢复和清理流程，不操作开发资源 | test；`test` | E2E 期间，1 个 |
+| `otel-collector` | 本项目日志采集、转发和持久队列 | 单机 prod 无 profile；test 为 `observability` | 单机生产常驻，1 个；日志专项测试按需 |
+| `migrate` / `seed` | 开发/生产受控迁移与初始化，凭据与 API 隔离 | dev/prod；`tools` | 两种独立一次性任务，串行 `run --rm` |
+| `migrate-test` / `seed-test` | 仅操作测试数据库的迁移与初始化 | test；`test-tools` | 两种独立一次性任务，串行 `run --rm` |
+| `e2e` | 预装匹配版本的 Chromium/Firefox 的测试执行器 | test；`e2e` | 一次性 `run --rm --no-deps` |
+
+| 场景 | 精确启动集合 / 预期运行数量 |
+|---|---|
+| 默认完整开发 | web、frontend、api、postgres、redis、maintenance、mailpit：**7 个** |
+| 开发 + Redis 调试 | 默认 7 个 + redisinsight：**8 个** |
+| 开发 + 仅数据库测试依赖 | 默认 7 个 + postgres-test：**8 个**；测试进程在宿主机执行，不计入容器 |
+| 开发 + 上述两项辅助 | 默认 7 个 + postgres-test + redisinsight：**9 个** |
+| 完整后端测试 | postgres-test、redis-test、mailpit-test：**3 个依赖服务**，执行中的 api-test 一次性 pytest 容器使运行总数为 **4 个**；由 run_backend_tests.py 编排 |
+| 独立完整 E2E | postgres-test、redis-test、mailpit-test、api-test、frontend-test、web-test、maintenance-test：**7 个测试服务**，加执行中的 e2e 为 **8 个**；迁移和 seed 在浏览器启动前串行结束 |
+| E2E 与默认开发并行 | 7 个开发服务 + 7 个测试服务 + 1 个执行器：**15 个**；若 postgres-test 已存在则复用该测试服务，不创建第二个副本 |
+| 日志专项测试 | 完整 E2E 集合额外启用 otel-collector：测试服务 **8 个**，执行器运行时 **9 个** |
+| Linux 单机生产基线 | web（含前端静态产物）、api、postgres、redis、maintenance、otel-collector：**6 个**；迁移/seed 不计入常驻数；SMTP、对象存储和集中日志后端是外部依赖 |
+
+云环境使用托管数据库/Redis/日志 agent 或增加 API replicas 时，必须另交付显式拓扑与数量公式，不能冒用单机生产的 6 个验收值。production 合并配置不得包含 frontend、Mailpit、RedisInsight 或任何 `*-test`/e2e service，即使被 profile 禁用也不允许夹带。
+
+- profile 固定为 `debug`、`test`、`tools`、`test-tools`、`e2e`、`observability`；不要把环境名与 Compose profile 混为一谈。默认入口拒绝隐式 `COMPOSE_PROFILES` 扩大启动集合；禁止使用 `--profile '*' up` 启动全部服务和一次性任务。显式指定 profiled service 会启动该服务及依赖，不会自动启动同 profile 的全部服务。必须按实际 provider 验证依赖图，默认服务不得依赖可选服务。
+- 默认开发使用 base + dev 文件；完整测试使用 base + test 文件且显式指定上述测试服务集合，禁止裸 `up` 顺带启动 base 中的开发依赖。`postgres-test` 及其他测试专用 service、network、volume、secret 声明只放 `compose.test.yml`，不放 base/dev/prod。仅需测试数据库时也使用 base + test 并显式指定 `postgres-test`；所有测试入口使用同一文件顺序和测试资源身份。base 中服务不得依赖测试定义，测试服务网络、数据卷和凭据保持隔离。
+- 调试仅显式启动 `redisinsight`；仅数据库测试依赖仅显式启动 `postgres-test`。E2E 脚本显式启动 7 个测试服务，等待健康后执行测试 migration/seed，再运行 e2e。日志专项测试显式增加 collector。任务不配置永久 restart；依赖就绪后任务使用 `--no-deps`，避免启动集合扩大。
+- 生成 `docs/container-topology.md` 和机器可读 `deploy/service-topology.json`，逐项记录 service key、用途、配置文件、场景/profile、依赖、镜像来源、端口变量、卷/读写用途、健康检查、数量、任务退出/清理规则。二者与 Compose/Quadlet 进行自动 drift 检查；README 给出默认/测试/调试/生产精确命令和预期数量，不能只写“启动全部容器”。
+- 创建前验证最终配置、provider、项目身份、端口和已有资源；使用同一 project/service 身份幂等协调。禁止用随机 project name、数字后缀、新 volume 或手工 `podman run` 反复试建长期服务来绕过错误。因平台文件共享限制需要临时 helper 时，事先登记用途、唯一任务标识和清理策略，在 finally 中只清理本次 helper。
+- 重复启动不能增加服务副本或生成新数据卷。失败须保留脱敏阶段日志和资源清单，修复后重试同一服务；不得以“退出”“未打标签”或“当前未挂载”单独判定垃圾。报告额外资源的 ID、归属、来源、状态、挂载和删除影响，经明确授权后才定向删除；普通停止不删卷，不执行全局 prune。
+- E2E 结束（成功、失败、取消）清理执行器、fixture 和本次创建的临时 helper，停止本次启动且未被其他任务使用的测试服务，保留运行前已有服务和数据卷；不能在共享 project 上执行会停止开发服务的 `down`。记录运行前后差异，退出容器与持久卷数量单独报告。
+
 ### 容器和发布
 
-- 分离 `web/nginx`、`api`、`migrate`；未来再增加 worker。生产容器一个 API 进程，由平台复制；单机 Compose 才可评估单容器多个 worker。
+- 分离 `web`（Nginx）、`api`、`maintenance` 和一次性 `migrate`；Phase 1 已包含 maintenance worker，未来通用任务 worker 不在本期范围。生产容器一个 API 进程，由平台复制；单机 Compose 才可评估单容器多个 worker。
 - 镜像多阶段构建、固定基础镜像版本、非 root、最小运行依赖、只读 root filesystem（必要临时目录单独挂载）。
 - 配置全部来自环境变量/secret manager；提供无真实值的 `.env.example`。立即轮换仓库历史中暴露过的密钥。
 - migration 是部署前单实例 job，失败则阻止新版本上线；API replica 不在 startup 自动迁移。
@@ -1440,26 +1576,26 @@ curl --version
 | postgres | 5432 | `35432` | `POSTGRES_HOST_PORT` | 仅开发暴露 |
 | postgres-test | 5432 | `35433` | `POSTGRES_TEST_HOST_PORT` | 自动测试专用，不复用开发库 |
 | redis | 6379 | `36379` | `REDIS_HOST_PORT` | 仅开发暴露 |
+| RedisInsight | 5540 | `35540` | `REDISINSIGHT_HOST_PORT` | dev-only 运维 UI；仅 loopback |
 | mailpit SMTP | 1025 | `31025` | `MAILPIT_SMTP_HOST_PORT` | 开发/测试邮件 |
 | mailpit UI | 8025 | `38025` | `MAILPIT_UI_HOST_PORT` | 查看验证/重置邮件 |
-| RedisInsight | 5540 | `35540` | `REDISINSIGHT_HOST_PORT` | 开发环境 Redis 可视化，仅绑定 loopback |
 | otel-collector OTLP/health | 4317/4318/13133 | — | — | 仅 production/test profile internal network，不发布到宿主机 |
 
 - 每次生成时必须由调用者为上表九个宿主机端口提供显式值；模板不提供可被多个工程重复采用的默认端口。`.env.example` 写入本次已经校验的值并注明可按注册表整体调整；Compose 通过 `${DEV_BIND_ADDRESS:?required}:${VARIABLE:?required}:容器端口`（或等价 long syntax）绑定开发基础设施，`DEV_BIND_ADDRESS` 的安全默认值在环境配置中设为 loopback，不能省略 host IP 后监听所有网卡，也不能省略 published port 后随机分配。Vite 等 internal-only 服务不得出现 `ports`，只允许使用 `expose`/容器网络。
 - `docs/ports.md` 是唯一端口注册表。任何新增监听端口必须先登记用途、环境变量、协议和冲突检查，再进入配置；禁止在源码、脚本和 CI 中散落未登记 magic port。
 - 提供跨平台 `scripts/check_ports.py`，检查 Compose 最终插值配置、`.env.example`、Vite、Uvicorn、Playwright、Nginx 和测试配置：所有项目拥有的宿主机固定监听端口必须在 `30000–39999`、工程内无重复、与 `docs/ports.md` 一致，并可读取同机共享端口登记文件做跨工程冲突检查。CI 和 `make ci` 必须运行该检查；找不到共享登记文件时明确报告“仅完成工程内检查”，不能伪称同机无冲突。
-- 启动脚本必须在拉起服务前探测目标端口是否已占用；若冲突则列出端口、用途和占用信息并退出，不得静默改用随机端口，否则文档、Cookie Origin、CORS 和 E2E 地址会失配。
+- 启动脚本必须在拉起服务前探测目标端口。只有经 Podman inspect 核实属于当前 project/service、绑定地址和 published port 与本次配置一致的运行容器，才视为本项目重复启动并继续幂等流程；外部进程、其他工程、配置不一致或无法验证归属的占用均列出用途与证据后退出。不能仅按进程名或端口开放认定本项目，不能静默改端口或终止占用者；检查后实际 bind 失败也必须明确报错。
 - Pytest 后端集成测试优先使用 HTTPX ASGI transport，不创建宿主机监听端口；确需真实 socket 的测试只能使用注册表中预留的 30000–39999 端口并串行管理生命周期。
 
-`maintenance` 为无端口后台服务，使用与 API 同版本代码但单独入口，并在镜像内安装 PostgreSQL 16 client。otel-collector 同样不得发布宿主机端口。RedisInsight 是 dev-only 运维 UI，必须使用独立 `${RESOURCE_PREFIX}redisinsight-data` 命名 volume、`/api/health/` healthcheck、对 Redis healthy 的依赖和 loopback host binding；不得被 API 或 production 服务依赖。生产 compose 不得创建或向公网发布 PostgreSQL、Redis、API 调试端口、Collector、Mailpit、RedisInsight 及其 volume。
+`maintenance` 为无端口后台服务，使用与 API 同版本代码但单独入口，并在镜像内安装 PostgreSQL 16 client。otel-collector 同样不得发布宿主机端口。RedisInsight 是 dev-only 运维 UI，必须使用独立 `${RESOURCE_PREFIX}redisinsight-data` 命名 volume、`/api/health/` healthcheck、对 Redis healthy 的依赖和 loopback host binding；不得被 API 或 production 服务依赖。单机生产按拓扑表创建内部 PostgreSQL、Redis、API、maintenance、Collector 及其必要持久卷，但不得向宿主机发布这些服务的数据库、调试或管理端口。Mailpit、RedisInsight 和全部测试专用服务及其资源声明不进入生产合并配置；生产浏览器入口仅由 web 发布。
 
 ### Windows 与 Linux 服务启停文档
 
 README 必须把 Windows PowerShell 和 Linux POSIX shell 作为两个同等支持的一等入口，分别给出从全新 checkout 到服务可访问的完整、可复制命令；不得只给一套 Bash 命令后要求 Windows 用户自行翻译，也不得要求 Windows 用户必须安装 WSL。两套说明必须使用相同的 `.env`、Compose 文件、service 名、迁移和 seed 顺序，并至少覆盖：
 
 1. 前置工具安装/版本检查、复制 `.env.example` 为 `.env`、配置秘密和运行 `scripts/check_template_values.py`、`scripts/check_ports.py`。
-2. 生成并信任开发证书；Windows 调用 `scripts/dev-certs.ps1`，Linux 调用 `scripts/dev-certs.sh`。
-3. 检查 Compose provider、执行 `podman compose ... config` 与最小实际 build、构建镜像、启动 PostgreSQL/Redis/RedisInsight/Mailpit、运行 Alembic migration、执行幂等 seed，再启动 API/frontend/Nginx/maintenance。
+2. 按第 14 节核对签发 CA 身份并安装宿主机信任，再生成/复用开发证书；Windows 调用 `scripts/dev-certs.ps1`，macOS/Linux 调用 `scripts/dev-certs.sh`。检查实际安装结果；未完成信任时不得继续宣称首次启动成功。
+3. 检查 Compose provider、执行 `podman compose ... config --quiet` 与最小实际 build、构建镜像、启动 PostgreSQL/Redis/Mailpit（RedisInsight 与测试数据库按需启动）、运行 Alembic migration、执行幂等 seed，再启动 API/frontend/Nginx/maintenance。
 4. 使用 `podman compose ps` 和 health URL 验证服务，列出 `DEV_PUBLIC_ORIGIN`、Mailpit UI、RedisInsight UI、PostgreSQL 与 Redis 的本机和容器网络连接方法。README 使用表格明确 host、container/host port、database、用户名对应的环境变量和密码/secret 来源；必须说明 bootstrap 管理员 username/email/password 分别来自 `BOOTSTRAP_ADMIN_USERNAME`、`BOOTSTRAP_ADMIN_EMAIL`、`BOOTSTRAP_ADMIN_PASSWORD`。只允许写变量名和安全取值方法，不得记录实际密码、完整含凭据 URL、token，命令也不得在参数、输出示例或 shell history 中展开秘密。
 5. 查看日志、重启单个服务、停止完整栈，以及明确标为破坏性且不属于日常停止流程的 volume 清理方法。普通停止命令只能执行 `down`，不能带 `-v`。
 
@@ -1473,54 +1609,58 @@ README 必须把 Windows PowerShell 和 Linux POSIX shell 作为两个同等支�
 
 ### 固定命令
 
+必须生成跨平台 `scripts/run_backend_tests.py`，作为完整后端 pytest 的标准入口：先用 typed Settings 校验 test 环境、独立数据库/角色及 Redis/邮件目标，拒绝开发或生产连接；显式使用 `--env-file .env -f deploy/compose.yml -f deploy/compose.test.yml` 检查配置、构建测试任务镜像，启动 `postgres-test redis-test mailpit-test` 三个服务并等待真实 healthy；串行执行 `run --rm --no-deps migrate-test` 与 `run --rm --no-deps seed-test`，然后以 `run --rm --no-deps api-test` 在测试镜像中执行 `uv run --locked pytest`，通过已校验的测试配置连接内部依赖。测试镜像在构建时安装锁定的测试依赖并包含测试源码，运行时不下载依赖；秘密不得进入 argv 或日志。无需向宿主机新增 Redis/邮件端口，也不启动长期 api-test 或增加 service key。容器执行期间额外 1 个一次性测试容器不计入常驻数。失败/取消保留脱敏结果并返回非零状态，finally 只清理本次任务和停止本次启动的依赖，保留已有服务/卷；与 E2E 并行时用任务锁串行化共享测试数据库的迁移/重置，或使用已登记的独立测试数据库，禁止互相覆盖 fixture。无外部依赖的纯单元测试可直接运行 `uv run --locked pytest backend/tests/unit`，不能以此替代完整后端验收。
+
+根 `package.json` 的 lint/typecheck/test/build 命令转发至各 workspace。`seed` 是独立一次性服务，只有 seed/测试 fixture 注入 bootstrap 凭据；长期 API/frontend 不注入初始管理员密码。`smoke_api.py --base-url` 固定接收 HTTPS origin，不含 `/api/v1`；脚本内部拼接 API 前缀并检查 `/health/ready`。提供 `--readiness-only` 模式用于重复启动和生产只读检查，不要求初始管理员密码。完整写流程 smoke 只针对已验证的隔离测试目标，使用受控 fixture；禁止把首次 bootstrap 密码作为长期健康探针。
+
+
 ```bash
 # 以下为 POSIX 参考命令；README 必须按上一节另给语义等价的 PowerShell 命令
-# 生成并信任本地开发 CA/证书
+# 核对 CA 身份、安装宿主机信任并生成/复用证书；权限失败须明确退出
 ./scripts/dev-certs.sh
 
-# 验证合并后的 compose 配置
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml config
+# 验证合并后的 compose 配置；不把展开后的秘密打印到终端/CI
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml config --quiet
 
 # 构建后先启动依赖，再迁移/seed，最后启动 HTTPS 应用栈
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml build
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml up -d postgres postgres-test redis redisinsight mailpit
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml build api frontend web
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml build maintenance
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml up -d postgres redis mailpit
 podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml run --rm migrate
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml run --rm api python -m app.seed
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml up -d api frontend web maintenance
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml run --rm seed
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml up -d api frontend maintenance
+# 本参考采用重建网关更新上游地址；测试栈由 run_e2e.py 单独管理
+podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml up -d --force-recreate --no-deps web
 # 浏览器只访问 .env 中的 DEV_PUBLIC_ORIGIN
 
 # 后端本地质量检查；不另启浏览器可访问的 HTTP server
-cd backend
 uv sync --locked
 uv lock --check
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy app
-uv run pytest
-cd ..
+uv run --locked ruff check backend scripts
+uv run --locked ruff format --check backend scripts
+uv run --locked mypy backend/app
+uv run --locked python scripts/run_backend_tests.py
 
 # 前端本地质量检查；`npm run dev` 只由 Compose frontend service 执行
-cd frontend
 npm ci
 npm run lint
 npm run typecheck
 npm run test
 npm run build
-cd ..
 
 # E2E 使用与 lockfile 完全相同版本且预装浏览器的专用容器，不在 frontend 应用容器临时下载浏览器
-podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml -f deploy/compose.test.yml --profile e2e run --rm e2e npm run e2e
+uv run --locked python scripts/run_e2e.py
 
-# HTTPS 黑盒 smoke：必须校验证书，不能关闭 verify
-uv run --project backend python scripts/smoke_api.py \
-  --base-url "${DEV_PUBLIC_ORIGIN:?required}/api/v1" \
+# 开发栈仅执行只读 smoke；origin 由 typed Settings 从 .env 读取，不要求 source .env
+uv run --locked python scripts/smoke_api.py \
+  --readiness-only \
   --ca-file deploy/certs/dev/rootCA.pem
 
 # 开发日志：PowerShell/macOS/Linux 使用相同 Python CLI，不依赖 grep/jq
-uv run --project backend python scripts/dev_logs.py logs --service api --level DEBUG --since 30m --follow
-uv run --project backend python scripts/dev_logs.py request --request-id 00000000-0000-0000-0000-000000000000
-uv run --project backend python scripts/dev_logs.py trace --trace-id 00000000000000000000000000000000
-uv run --project backend python scripts/collect_diagnostics.py --since 30m
+uv run --locked python scripts/dev_logs.py logs --service api --level DEBUG --since 30m --follow
+uv run --locked python scripts/dev_logs.py request --request-id 00000000-0000-0000-0000-000000000000
+uv run --locked python scripts/dev_logs.py trace --trace-id 00000000000000000000000000000000
+uv run --locked python scripts/collect_diagnostics.py --since 30m
 
 # 验证 maintenance 使用正确 PostgreSQL client
 podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml exec maintenance pg_dump --version
@@ -1532,16 +1672,18 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 ### 单机生产 Podman 生命周期
 
 - `compose.yml + compose.prod.yml` 是服务拓扑、镜像、network、volume、secret、resource limit 与 healthcheck 的权威声明，用于 CI production smoke 和受控发布。Linux 单机长期运行必须另外生成 `deploy/quadlet/`，以当前 Podman 官方推荐的 Quadlet/systemd user units 管理开机启动、依赖顺序、失败重启、stop timeout 与日志来源；不得继续使用已弃用的 `podman generate systemd` 作为新实现。
-- Quadlet 的 image、digest、user、network、volume、secret、health、read-only、capability 与 Compose production 定义必须由同一份受类型校验的部署输入生成或由自动 drift test 逐项比较，禁止维护两套手写且会漂移的生产参数。rootless unit 放入 `~/.config/containers/systemd/`，README 给出 `systemctl --user daemon-reload/enable --now/status/stop`、linger 前置条件、失败恢复和卸载步骤；rootful 仅在明确运维批准时使用 `/etc/containers/systemd/`。
+- Quadlet 的 image、digest、user、network、volume、secret、health、read-only、capability 与 Compose production 定义必须由同一份受类型校验的部署输入生成或由自动 drift test 逐项比较，禁止维护两套手写且会漂移的生产参数。rootless unit 放入 `~/.config/containers/systemd/`，Quadlet 文件使用 `[Install]` 的 `WantedBy=default.target` 管理开机启动，README 分别给出 `systemctl --user daemon-reload`、`systemctl --user start <unit>.service`、status/stop 命令、linger 前置条件、失败恢复和卸载步骤；生成的 service 不能直接 `systemctl enable`，卸载时先 stop，再移除 Quadlet 定义并 daemon-reload；rootful 仅在明确运维批准时使用 `/etc/containers/systemd/`。
 - production 主机只拉取已签名且 digest 锁定的镜像，不现场 build；secret 使用 Podman secret/挂载文件或平台 secret manager 注入，不出现在 Quadlet、Compose 展开输出、命令参数、镜像层和 journald。发布流程先 migration job、再应用 unit，失败不得把数据库自动降级；升级、回滚、证书轮换和主机重启后均执行 readiness/HTTPS smoke。
 - 自动更新不是默认行为；只有签名验证、兼容 migration、健康门禁和回滚策略全部配置后才允许 Quadlet `AutoUpdate`。开发环境仍以 Podman Compose 为唯一启动方式，Windows 不要求 systemd/Quadlet，云平台可用等价托管编排替代。
 
 ### Compose 验收
 
-- `compose.yml` 只放跨环境共同定义；`compose.dev.yml` 放开发端口、Mailpit、RedisInsight、热更新；`compose.test.yml` 放测试 CA、测试依赖和版本匹配的 Playwright E2E service/profile；`compose.prod.yml` 放资源限制、只读文件系统、生产 restart/health 配置，并通过 drift test 与 `deploy/quadlet/` 保持一致。
+- `compose.yml` 只放跨环境共同定义；`compose.dev.yml` 放开发端口、Mailpit、RedisInsight、热更新；`compose.test.yml` 独占测试 CA、全部测试服务及专用资源声明（包括 postgres-test、migrate-test、seed-test）和版本匹配的 Playwright E2E service/profile；`compose.prod.yml` 放资源限制、只读文件系统、生产 restart/health 配置，并通过 drift test 与 `deploy/quadlet/` 保持一致。
 - README 中 Windows 与 Linux 的冷启动、重复启动、单服务重启、日志查看和普通停止步骤均可直接执行；四个 `dev-up/dev-down` 脚本与文档命令保持一致，普通停止不删除 volume，平台差异不会改变数据库、Cookie、Origin 或资源 namespace。
 - `compose.dev.yml` 中 frontend 不发布端口；Nginx 通过集中配置的 internal service endpoint 代理页面、WebSocket HMR 和 API，并只按 `${DEV_BIND_ADDRESS}:${WEB_DEV_TLS_HOST_PORT}:443` 发布。开发证书不存在、不受信或与 `DEV_HOSTNAME` 不匹配时启动/smoke 必须失败并提示运行 dev-certs 脚本。
-- PostgreSQL、Redis、Mailpit、RedisInsight、API、Nginx、maintenance，以及启用 production/test profile 时的 otel-collector 都有真实 healthcheck；RedisInsight 必须检查 `/api/health/`，浏览器 smoke 必须验证其 loopback UI 返回成功且 production config 不存在该 service。`depends_on` 不能被误认为应用级 readiness，API 自身仍要重试有限次并暴露 readiness。
+- PostgreSQL、Redis、Mailpit、RedisInsight、API、Nginx、maintenance，以及启用 production/test profile 时的 otel-collector 都有真实 healthcheck；RedisInsight 必须检查 `/api/health/`，启用调试服务时浏览器 smoke 必须验证其 loopback UI 返回成功且 production config 不存在该 service。`depends_on` 不能被误认为应用级 readiness，API 自身仍要重试有限次并暴露 readiness。
+- 健康探针必须在真实 Compose provider 下执行并检查 exit code、health log 和最终 healthy 状态；`Up`、YAML 解析成功和 HTTP 手工成功均不能替代容器探针通过。优先独立模块/脚本（例如 `python -m app.healthcheck api`），避免跨 provider 传递多层 `-c` 内联代码；具体 workaround 记入 toolchain，不断言所有 Podman 版本都存在同一问题。
+- liveness 仅反映进程，readiness 有总 deadline、检查 schema/权限不变量和必要依赖；探针 timeout 必须大于内部检查 deadline。数据库暂不可用时 API readiness 降级，维护进程以有限退避/jitter 重新建连且日志脱敏；恢复后重新检查 lease/任务状态，不能盲目重放已有副作用的 restore。heartbeat 不得把已失联或卡死任务伪装为健康，SIGTERM/取消可在 stop timeout 内退出。
 - 提供命名 volume，明确哪些可以删除；测试数据 volume 与开发数据 volume 分离。任何清库命令必须标注破坏性并要求明确目标环境。
 - `podman compose down` 不带 `-v`；文档不得把删除 volume 写进普通停止流程。
 - Containerfile 使用 uv lock 做可复现安装；复制 `.venv` 前考虑平台相关性，默认在 Linux builder 内创建，不复制宿主机 `.venv`。
@@ -1549,7 +1691,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 ## 16. 实施顺序
 
-0. 在任何源码写入前收集、规范化并验证全部 `{{...}}` 模板输入，生成 `docs/project-identity.md` 与 `docs/ports.md`；完成 `CFG-*` 的双实例隔离 fixture，确认调用者提供的工程标识和端口不会与同机登记项冲突。
+0. 在任何源码写入前收集、规范化并验证全部模板输入，生成 `docs/project-identity.md` 与 `docs/ports.md`；完成 `CFG-*` 的双实例隔离 fixture，确认调用者提供的工程标识和端口不会与同机登记项冲突。
 1. 审计当前 RBAC 数据和行为，写出保留/废弃映射，不修改 `storage/`。
 2. 建立 monorepo 命令、`.gitignore`/各 context `.containerignore`、后端基础、配置和测试数据库 fixture；先让 secret/build-context 检查通过再构建镜像。
 3. 按第 5 节创建第一组 Alembic migration，并完成 `DB-*` 测试。
@@ -1567,11 +1709,15 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 ## 17. 完成定义
 
-只有同时满足以下条件才算 Phase 1 完成：
+必须提交 `docs/implementation-status.md` 与机器可读的 `docs/verification-result.json`。按需求/测试编号分别记录实现状态（未实现/部分实现/已实现）和验证状态（未执行/通过/失败/受环境限制），附命令、执行日期、源码 revision 或 dirty 状态/内容 fingerprint、平台与工具版本、脱敏结果及 artifact 路径。统计须给出适用总数、执行/通过/失败/跳过数量，不能用少量通过用例替代完整矩阵；代码或部署配置变化后标记受影响证据待复验。
+
+开发工程可运行、功能矩阵完成、生产部署验证是不同里程碑。平台或凭据不足时记录缺少的前提，不得把静态配置验证写成真实部署通过；首次交付执行一次归档恢复演练，后续季度演练记录到期计划与实际结果，不要求等待一个季度，也不能声称未来演练已通过。提示词版本与实现版本独立，文档升级不会使现有实现自动符合新契约。
+
+只有同时满足以下条件才算 Phase 1 完成；分阶段报告不豁免任何适用条件：
 
 - 本次 `PROJECT_DISPLAY_NAME/PROJECT_SLUG/PROJECT_DB_PREFIX`、资源派生值和九个宿主机端口均来自调用者输入并通过格式/冲突校验；`docs/project-identity.md`、`docs/ports.md`、`.env.example` 与 Compose 最终插值一致。
 - `.gitignore`、各 build context 的 `.containerignore`、secret scanning、ignore fixture 和镜像内容检查全部通过；`.env`、私钥、证书生成物、诊断包、备份、日志、宿主机依赖和测试报告均未进入 Git、build context 或镜像层，`.env.example`、migration 与 lockfile 未被误忽略。
-- 除这份可复用模板源文件外，生成物不存在未解析双花括号占位符、模板示例工程名、项目身份/hostname/origin/宿主机端口 magic literal 或跨工程 namespace；两套不同输入的 `CFG-*` 隔离测试通过。
+- 除通用模板源文件 `docs/prompts/rebuild-rbac-system-v1.md` 外，生成物不存在未解析模板参数、错误模板示例工程名、项目身份/hostname/origin/宿主机端口 magic literal 或跨工程 namespace；两套不同输入的 `CFG-*` 隔离测试通过。
 - 空数据库可用 Alembic 构建，seed 可重复执行且没有默认公开密码。
 - 表、约束、索引与第 5 节一致。
 - 注册→邮件验证→管理员审批/拒绝流程完整，邮件 token 不以明文落库或进入日志。
@@ -1588,16 +1734,16 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 - login history 与 action history 分工清楚、可筛选、不可普通修改且已脱敏。
 - 后端/Nginx JSON 日志和前端错误遥测字段受控、可用 request/trace id 关联且通过 canary secret 泄漏测试；日志采集失败不会阻塞业务或撑爆磁盘。
 - development/test/production 日志 profile、依赖耗时、异常 fingerprint/stack、前端安全 breadcrumb/Support ID、按 request/trace 检索及脱敏 diagnostics 在 Windows/Linux 均真实可用；可从注入故障的 Support ID 定位到具体服务、operation、版本和 source frame。
-- 生产日志按 UTC 日次幂等归档到独立加密存储，热/冷/审计保留期、26 小时告警、生命周期删除和季度恢复演练均实际通过；运行日志不混入 `${BACKUP_EXTENSION}` bundle。
+- 生产日志按 UTC 日次幂等归档到独立加密存储，热/冷/审计保留期、26 小时告警、生命周期删除和首次归档恢复演练实际通过，季度演练计划已配置且交付时已到期的演练有通过证据；运行日志不混入 `${BACKUP_EXTENSION}` bundle。
 - 无需表/schema 清单即可把包含任意数量数据库对象的 `${BACKUP_EXTENSION}` bundle 恢复到空 PostgreSQL；checksum/Ed25519、safety backup、隔离恢复、验证和回滚流程通过。
 - 管理员能按权限创建/下载/导入/校验备份；只有最近重新认证的 super-admin 能启动 restore，API 账号本身没有 CREATEDB/superuser。
-- 普通账户区和管理控制台完全分离，普通用户看不到管理 UI。
+- 普通账户区和管理控制台完全分离，普通用户看不到管理 UI；特权账户保护、角色授予子集与并发越权测试通过，改密全部退出、family 即时撤销及双标签页协调通过。
 - `system/light/dark × default/eye_care/sepia/forest` 主题组合在 Public/Account/Admin 全布局无首屏闪烁、可跨刷新/设备同步且共享浏览器不串号；全部 palette 的 light/dark/high contrast/forced-colors/reduced-motion 和管理员视觉身份通过自动化 token、可访问性与视觉回归测试。
 - Nginx/容器配置可运行，并提供单机与云部署差异说明；生产入口、跨信任边界 upstream、PostgreSQL、Redis、对象存储和 SMTP 的 TLS/证书验证满足第 14 节且不能静默降级。
 - 本地完整栈只通过 `DEV_PUBLIC_ORIGIN` 访问，开发 CA、Nginx TLS、WSS HMR、Secure Cookie、Origin、Playwright 和 smoke 已真实测通；Vite/API 没有浏览器可绕过的宿主机 HTTP 入口。
-- development profile 的 RedisInsight 使用锁定 digest、独立命名 volume 和 `/api/health/`，仅绑定 `127.0.0.1:35540` 并能通过 `redis:6379` 连接本项目 Redis；staging/production 配置、镜像清单和 volume 中不存在 RedisInsight。
+- development profile 的 RedisInsight 使用锁定 digest、独立命名 volume 和 `/api/health/`，仅绑定 `${DEV_BIND_ADDRESS}:35540` 在显式启用后能通过 `redis:6379` 连接本项目 Redis；staging/production 配置、镜像清单和 volume 中不存在 RedisInsight。
 - Playwright npm package、E2E 镜像与浏览器 executable 版本严格一致；专用容器中的 Chromium 和 Firefox 均实际执行通过，测试不会因应用容器缺少浏览器或运行时下载而产生假通过。
-- README 的 Windows/Linux 冷启动、数据库/Redis/RedisInsight/Mailpit 连接表和 bootstrap 凭据来源完整，未包含任何实际秘密；开发/test 使用 uv/npm 与 Podman 的职责、生产只运行不可变镜像的边界清楚。
+- README 的 Windows/Linux 冷启动、数据库/Redis/RedisInsight/Mailpit 连接表和 bootstrap 凭据来源完整，未包含任何实际秘密；development/test 使用 uv/npm 与 Podman 的职责、production 只运行不可变镜像的边界清楚。
 - Linux 单机 production Quadlet units 已通过与 `compose.prod.yml` 的 drift test、开机启动、失败重启、受控 migration、升级/回滚、证书轮换和主机重启 smoke；Windows 开发不依赖 systemd，云部署差异有明确 runbook。
 - 所有编号测试有真实代码且实际执行通过；报告实际结果和基础负载指标。
 - OpenAPI 中每个 endpoint 都被 endpoint matrix 和自动化测试覆盖，完整 Podman 栈的黑盒 smoke 通过。
@@ -1605,3 +1751,25 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 - 没有实现任何学习、LLM、Vocab 或其他业务功能。
 
 最终回复必须列出关键文件、migration revision、seed 命令、启动命令、测试命令与实际结果、架构决策、已知限制和需要轮换的凭据。不得用“理论上可运行”代替验证。
+
+## 18. 本次文档修订的技术依据
+
+2026-09-05 通过 Context7 核对以下官方资料；实现时仍须按锁定版本复核。授权边界、改密全部退出和 E2E 网络拓扑是本项目设计决策，不是框架默认行为。
+
+- [Podman Quadlet](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html)：生成的 service 不能直接 enable，开机启动由 Quadlet `[Install]` 声明；reload 后 start。
+- [Playwright Docker](https://github.com/microsoft/playwright/blob/main/docs/src/docker.md)：容器访问本地服务需要显式网络配置。本文选择共享 web-test 网络命名空间，实际 Podman provider 兼容性由 DEP-012 验证。
+- [Playwright 浏览器安装](https://github.com/microsoft/playwright/blob/main/docs/src/browsers.md)：`NODE_EXTRA_CA_CERTS` 用于 Node 侧自定义 CA；该说明不能替代 Chromium/Firefox 页面访问的证书信任测试。
+
+
+2026-09-06（v1.14）再次使用 Context7 核对：
+
+- [PostgreSQL 16 passfile](https://www.postgresql.org/docs/16/libpq-pgpass.html) 与 [libpq 环境变量](https://www.postgresql.org/docs/16/libpq-envars.html)：passfile 文件权限和 `PGPASSFILE`；`PGPASSWORD` 不是默认安全替代。目录 0700 与秘密文件 0600 分别处理。
+- [Uvicorn proxy headers 实现](https://github.com/kludex/uvicorn/blob/main/middleware/proxy_headers.py)：可信 hostname 不自动解析为 IP，代理允许列表必须按真实 peer 验证。
+- [Nginx upstream](https://nginx.org/en/docs/http/ngx_http_upstream_module.html)：DNS 地址更新依赖适当 resolver/upstream 配置和版本能力；本文允许动态解析或受控网关重载两种经实测的实现。
+- 历史参考实例在 Podman 5.8.1 / Compose provider 5.1.1 下遇到过探针参数、上游重建后的 DNS 缓存及证书库重复初始化问题；这些仅是需复验的案例，不是所有平台的框架缺陷或本模板的已通过证据。新的生成工程须自行验证，并生成自己的 `docs/toolchain.md`；使用本模板不依赖该历史实例的文件。
+
+2026-09-06（v1.15）通过 Context7 核对 [Compose profiles](https://github.com/docker/docs/blob/main/content/manuals/compose/how-tos/profiles.md) 与 [profile 依赖约束](https://github.com/docker/docs/blob/main/content/reference/compose-file/profiles.md)：显式指定服务只拉起该服务及其依赖，同 profile 的其他服务不会因此全部启动。上述服务白名单与数量是本项目设计契约，必须用实际 Podman Compose provider 验证，不是工具默认保证。
+
+2026-09-06（v1.16）通过 Context7 核对 [mkcert 官方说明](https://github.com/FiloSottile/mkcert/blob/master/README.md)：`-install` 安装本机 CA 信任，`TRUST_STORES` 选择目标信任库，`-uninstall` 撤销对应信任；Firefox 安装后需要重启。第 14 节的分阶段验证和失败门禁是本项目验收要求，不从证书生成或容器测试结果推断宿主机已受信。
+
+2026-09-06（v1.17）通过 Context7 核对 [Compose 多文件合并](https://github.com/docker/docs/blob/main/content/manuals/compose/how-tos/multiple-compose-files/merge.md) 与 [profiles](https://github.com/docker/docs/blob/main/content/manuals/compose/how-tos/profiles.md)：按文件顺序合并服务定义，profile 控制启动选择；本模板通过测试定义只存在于测试文件来保证生产配置不包含测试服务。
