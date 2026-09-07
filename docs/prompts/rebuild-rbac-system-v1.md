@@ -1,4 +1,10 @@
-# 可复用 RBAC Phase 1：完整基础系统重建提示词 v1.17
+# 可复用 RBAC Phase 1：完整基础系统重建提示词 v1.18
+
+### v1.18 变更记录
+
+- 将未来业务示例统一为多用户 AI 与长任务，补充去重授权范围及任务访问边界，仍只交付 ADR。
+- 统一 `row_version` 请求契约与临时密码来源，补齐公共响应模型、逐接口成功响应和错误码目录。
+- 明确输入长度/null 语义、离线恢复确认短语、工具支持矩阵与安全补丁策略，补充对应验收。
 
 ### v1.17 变更记录
 
@@ -40,7 +46,7 @@
 - 固定所有 Compose 命令显式使用同一个 `.env`，增加实际 provider 的最小构建兼容测试。
 - 增加版本严格匹配且预装浏览器的 Playwright E2E 容器契约，并明确单机生产的 Podman/Quadlet 生命周期。
 
-> 将本文件全文交给编码 Agent 执行。本阶段只建设认证、RBAC、会话和安全审计底座，不实现任何学习业务。交付物必须可运行、可迁移、可测试、可部署；禁止只生成脚手架、伪代码或静态页面。
+> 将本文件全文交给编码 Agent 执行。本阶段只建设认证、RBAC、会话和安全审计底座，不实现具体领域业务。交付物必须可运行、可迁移、可测试、可部署；禁止只生成脚手架、伪代码或静态页面。
 
 ## 1. 执行原则
 
@@ -134,12 +140,12 @@ DEV_PUBLIC_ORIGIN    = https://{{DEV_HOSTNAME}}:{{WEB_DEV_TLS_HOST_PORT}}
 - 后端基础依赖限定为 redis-py asyncio、HTTPX、PyJWT、pwdlib[argon2]、email-validator、`cryptography`（仅用于 Ed25519 备份签名/验证）；Phase 1 禁止引入 Celery、RQ、Kafka、RabbitMQ 或另一套 ORM。
 - 迁移：Alembic；禁止在应用启动时调用 `create_all()`。
 - 数据库：PostgreSQL 16.x 的最新安全 minor；不自动跨 major 升级。
-- Redis：Redis Open Source 8.2.x，用于限流、短期权限缓存和跨副本协调；Redis 故障不能导致权限错误放行。
+- Redis：Redis Open Source 8.2.x 的实现当日最新安全补丁，记录精确版本并锁定镜像 digest，用于限流、短期权限缓存和跨副本协调；Redis 故障不能导致权限错误放行。新分支发布不自动触发换栈，原分支不再受安全维护时按本节升级流程处理。
 - RedisInsight：仅允许用于 development 环境，Compose 使用 `debug` profile，使用官方 `redis/redisinsight` 镜像并锁定实现当日稳定 tag 与 digest，容器端口固定 5540，命名 volume 只挂载 `/data`，健康检查调用 `/api/health/`。它与 Redis 加入同一个内部网络，README 使用 service host `redis:6379` 说明首次连接；宿主机 UI 只能通过 `${DEV_BIND_ADDRESS}:${REDISINSIGHT_HOST_PORT}:5540` 访问。production/staging 禁止启用、发布或携带 RedisInsight 数据卷。
 - 密码：Argon2id，固定使用 `pwdlib[argon2]`；Context7 若无法解析 pwdlib，不得卡住实施或改用不相关库，直接查阅 pwdlib 官方文档/官方源码与发布元数据，把链接、版本和关键 API 记录到 `docs/toolchain.md` 后继续。
 - Token：PyJWT；access JWT + rotation refresh session。
 - 测试：Pytest 8.x + AnyIO pytest plugin（统一使用 `@pytest.mark.anyio`，不再并装 pytest-asyncio）、HTTPX AsyncClient、前端组件测试、Playwright Test、OpenAPI schema/coverage 检查。
-- 容器：Podman 5.7+、`podman compose`；必须检测并记录实际 compose provider/version，不能假设所有机器使用同一个外部 provider。
+- 容器：Podman 最低版本 5.7、`podman compose`；最低版本不代表其所有补丁或后续大版本均已验证。实现时选择仍受维护且包含安全修复的精确版本，并在 `docs/toolchain.md` 记录 OS/版本/架构、Podman、machine provider（适用时）、compose provider/version、网络/存储后端及验证结果。支持矩阵区分“计划支持/已验证/不支持”，升级大版本先核对平台支持与迁移说明，再执行第 15 节真实 provider/Quadlet 验证；不能假设所有机器使用同一个外部 provider。
 - 入口与静态资源：本地/单机生产使用 Nginx；云环境允许由云 Load Balancer/Ingress/CDN 替代部分职责。
 - 本地开发 CA：mkcert，使用实现当日官方发布的稳定版并把版本记录到 `docs/toolchain.md`；只负责开发证书，不进入生产镜像或生产证书流程。禁止用 Vite basic-ssl 的临时自签名证书替代受信本地 CA。
 - 日志管道：应用/Nginx 只输出结构化 stdout/stderr；单机部署固定使用实现当日稳定版的 OpenTelemetry Collector Contrib 镜像并锁定 digest，云部署可使用等价托管 agent，负责采集、allowlist/redaction、batch、retry、持久化有界队列和集中导出。应用业务代码不得绑定某个日志厂商 SDK，实际版本记录到 `docs/toolchain.md`。
@@ -166,8 +172,8 @@ DEV_PUBLIC_ORIGIN    = https://{{DEV_HOSTNAME}}:{{WEB_DEV_TLS_HOST_PORT}}
 
 ### 明确不实现
 
-- 课程、科目、报名、学习、进度、听力、拼写、IELTS、词典、文件库、协同编辑。
-- LLM、端侧模型、远程模型、TTS、PDF、Vocab 生成和任务队列的具体业务实现。
+- 具体领域业务模块，例如学习管理、内容/文件库或协同编辑。
+- AI 推理、内容生成、文档处理和通用任务队列的具体业务实现。
 - 第三方登录、MFA、组织/多租户。
 - Kubernetes、服务网格、微服务和微前端。
 
@@ -710,7 +716,7 @@ system.restore
 - 邮件验证 token 默认 24 小时，密码重置 token 默认 30 分钟；消费后立即失效。密码重置成功后递增 auth_version 并撤销全部 refresh sessions。
 - maintenance retention job 定期删除已过期且超过审计保留窗口的 verification/reset/registration-status token 与 email-change request 行，包括 decoy status token；删除只按 expiry/purpose 批处理，不读取或导出敏感原值或目标邮箱。
 - 密码策略固定为 12–128 Unicode 字符，允许空格和 password manager 生成值；禁止与规范化 username/email 相同，检查最近 5 个历史密码。不得强制“必须含大小写数字符号”式组合规则。
-- 管理员创建用户时可设置角色并生成临时密码，用户标记 `must_change_password=true`；该用户登录后只能访问 `/me/change-password`、`/auth/logout` 和 `/auth/me`，完成改密前不能使用其他 API。
+- 管理员创建用户或强制重置密码时，由管理员在客户端输入或使用密码管理器生成临时密码，分别通过 `UserCreate.password` / `PasswordReset.new_password` 提交。后端按统一密码策略校验并哈希，不生成或回传明文临时密码；响应、幂等结果、邮件、日志和审计均不得包含该密码。管理员负责通过经批准的安全渠道交付，客户端提交完成或关闭表单后清除内存中的明文。创建时可按授权边界设置角色；创建和重置均标记 `must_change_password=true`，重置同时递增版本并撤销全部会话。该用户登录后只能访问 `/me/change-password`、`/auth/logout` 和 `/auth/me`，完成改密前不能使用其他 API。
 - 管理员审批、拒绝、激活、停用、角色授权和密码重置必须写 action history，并向用户发送不含敏感信息的通知；邮件失败不回滚已提交的安全状态，但必须记录可重试的运维错误。
 
 ### Profile、身份标识与偏好边界
@@ -758,10 +764,10 @@ system.restore
 - Argon2 hash/verify 属于 CPU 密集工作，必须放入容量受限的线程池或等效隔离执行，并设置登录并发上限；不得阻塞主 event loop，也不得创建无限线程。
 - 每个请求最多一个主事务；调用 Redis、邮件、远程 HTTP、LLM 或文件处理时不得保持数据库事务或行锁。
 - 使用数据库唯一约束处理并发重复创建；捕获 `IntegrityError` 后回滚并返回稳定 409。
-- 修改 users/roles 时使用 `row_version` 乐观并发控制；API 通过 `version` 字段或 `If-Match` 提交旧版本，不匹配返回 409 `VERSION_CONFLICT`。
+- 修改 users/roles 时使用 `row_version` 乐观并发控制；客户端只通过 JSON body 的 `row_version` 提交旧版本（DELETE 同样使用 JSON body），不接受 `version` 或 `If-Match` 作为替代。每个接口的版本归属与请求模型见第 10 节；缺失/非法版本返回 422，版本过期返回 409 `VERSION_CONFLICT`。
 - 乐观锁必须使用单条 `UPDATE ... WHERE id=:id AND row_version=:expected` 并检查 affected row count，不能先读取再无条件 update。
 - 最后一个 super-admin 检查必须在同一事务中锁定相关用户/角色关联行，避免两个管理员并发撤权同时通过。
-- 管理写接口接受 `Idempotency-Key`。同用户、同 endpoint、同 key 且 request hash 相同，返回已保存结果；hash 不同返回 409；处理中返回 409/425 和 `Retry-After`。
+- 管理写接口接受 `Idempotency-Key`。同用户、同 endpoint（含 method 与资源路径）、同 key 且 request hash 相同，返回已保存结果；hash 不同返回 409 `IDEMPOTENCY_KEY_CONFLICT`；处理中固定返回 409 `IDEMPOTENCY_IN_PROGRESS` 和 `Retry-After`。重放前仍校验调用者当前身份与权限；凭据只参与安全的请求指纹计算，不写入缓存响应或审计。
 - API 必须无状态，可运行多个副本；禁止用进程内 dict、Lock 或全局变量保证正确性。
 - 数据库连接池大小通过环境变量配置。文档给出预算公式：`API_REPLICAS × (POOL_SIZE + MAX_OVERFLOW) + migration/worker reserve < PostgreSQL max_connections`。
 - 云上副本较多时支持 PgBouncer；不得同时把应用池和 PgBouncer 池配置得无限大。
@@ -864,7 +870,7 @@ podman compose run --rm \
   python -m app.cli.restore_backup --target-database "${RESTORE_TARGET_DATABASE:?required}"
 ```
 
-README 必须注明 Windows PowerShell 的绝对路径写法。archive 固定不包含 `CREATE DATABASE`，任何路径都不得使用 `pg_restore --create/-C`，数据库名称永远以经过校验的 `TARGET_DATABASE` 为准。CLI 默认禁止覆盖既有数据库；单独的离线 break-glass 原名重建必须要求输入目标数据库全名和固定确认短语、检查/终止连接、成功创建 safety backup，把旧库 rename 到带时间戳的 quarantine 名称，再从 `template0` 创建明确命名的新空库并用不带 `--create`/`--clean` 的 `pg_restore --dbname="$TARGET_DATABASE"` 恢复。任一步失败都保留 quarantine/safety backup，绝不根据 archive 内的 source database 名执行 drop/create。
+README 必须注明 Windows PowerShell 的绝对路径写法。archive 固定不包含 `CREATE DATABASE`，任何路径都不得使用 `pg_restore --create/-C`，数据库名称永远以经过校验的 `TARGET_DATABASE` 为准。CLI 默认禁止覆盖既有数据库；单独的离线 break-glass 原名重建必须要求输入目标数据库全名和大小写精确匹配的固定确认短语 `RESTORE ORIGINAL DATABASE`（不接受 API 的 `RESTORE TO NEW DATABASE`、空值或通用 yes/--force 代替）、检查/终止连接、成功创建 safety backup，把旧库 rename 到带时间戳的 quarantine 名称，再从 `template0` 创建明确命名的新空库并用不带 `--create`/`--clean` 的 `pg_restore --dbname="$TARGET_DATABASE"` 恢复。任一步失败都保留 quarantine/safety backup，绝不根据 archive 内的 source database 名执行 drop/create。
 
 ### 双层灾备策略
 
@@ -874,15 +880,16 @@ README 必须注明 Windows PowerShell 的绝对路径写法。archive 固定不
 - 明确保留策略，例如每日 7 份、每周 4 份、每月 12 份；实际删除由 maintenance worker 执行并写 action history。
 - 每月至少自动做一次“恢复到隔离数据库并验证”的演练。只有可恢复并通过验证的备份才算有效。
 
-## 9. 为未来 LLM/Vocab 并发预留的边界
+## 9. 为未来多用户 AI 与长任务并发预留的边界
 
-本阶段不实现任务队列和任何模型调用，只新增一份 ADR，固定未来业务遵守以下边界：
+本阶段仅通过一份 ADR 记录未来多个用户同时触发 AI 推理、内容生成或文档处理时必须遵守的边界；具体任务类型由后续业务定义。本节不要求实现任务队列或任何模型调用，也不改变第 8 节已有备份/恢复 maintenance 的实现要求：
 
-- HTTP API 不直接执行长时间 LLM、端侧模型、PDF 或 Vocab 任务；提交后返回 `202 + job_id`，由独立 worker 执行。
+- HTTP API 不直接执行长时间 AI 推理、内容生成或文档处理任务；完成鉴权、配额检查并持久接受任务后返回 `202 + job_id`，由独立 worker 执行。FastAPI `BackgroundTasks` 或进程内 fire-and-forget 不能作为可靠任务队列。
 - API、通用 worker、CPU 文档 worker、GPU/端侧模型 worker 独立进程和独立扩缩容。
 - 每用户并发配额、每 provider/model 并发上限、全局队列上限均使用跨副本协调，不能使用单进程 semaphore。
-- 相同 `job_type + resource_id + resource_version + normalized_params_hash` 支持去重；“Vocab”重复点击不能启动多个相同任务。
-- 队列满时明确返回 429/503 和 Retry-After，实施背压，不能无限积压。
+- 相同 `authorization_scope + job_type + resource_id + resource_version + normalized_params_hash` 支持原子去重，防止同一任务重复点击或跨副本并发提交产生重复工作；默认授权范围包含提交用户。参数指纹必须包含影响结果的模型/提示词版本等输入。跨用户共享任务或结果只能在后续 ADR 明确共享资源权限、结果可见性和计费归属后启用，不能仅因参数相同而合并。
+- 提交、查询、SSE/WebSocket 订阅、下载结果和取消任务分别校验当前身份与资源权限；知道 `job_id` 不代表有访问权。worker 执行及结果发布前复核所需权限；权限撤销后不得继续向原订阅者发送结果。共享任务的单用户取消不能终止其他有权用户仍在使用的任务。
+- 用户配额耗尽返回 429，全局队列满或执行设施不可用返回 503，均附 Retry-After，实施背压，不能无限积压。
 - worker 使用 lease/heartbeat、超时、取消、幂等提交和有限重试；只对可安全重试错误使用指数退避和 jitter。
 - 模型输出先写临时对象，再通过原子状态更新发布；失败不能覆盖上一次成功结果。
 - GPU 模型不能随 API worker 数量重复加载。模型 worker 数按 GPU/内存预算部署。
@@ -901,9 +908,15 @@ ADR 只定义接口、状态机和约束，不创建 job 表、worker 空壳或�
 
 所有响应不得返回 `password_hash`、token hash 或内部敏感 metadata。
 
-固定公共 DTO；字段不得由执行者随意改名。涉及 super-admin 保护动作时，请求额外接受 `reauth_password`（string[1..128]，仅验证调用者密码，不写入幂等响应、日志或审计）；DELETE 使用 JSON body。OpenAPI 必须表达该字段及条件必填规则：
+固定公共 DTO；字段不得由执行者随意改名。下列 `?` 仅表示可省略，`|null` 才表示允许 null；PATCH 省略表示保持原值，null 只用于显式清空可空字段。请求拒绝未知字段；同名字段的类型/长度继承下列公共类型，不得仅依赖数据库约束。涉及 super-admin 保护动作时，请求额外接受 `reauth_password`（string[1..128]，仅验证调用者密码，不写入幂等响应、日志或审计）；DELETE 使用 JSON body。OpenAPI 必须表达该字段及条件必填规则：
 
 ```text
+Username          = string[3..64]
+NewPassword       = string[12..128]
+CurrentPassword   = string[1..128]
+RowVersion        = integer[1..]
+RoleCode          = string[2..80], pattern=^[a-z][a-z0-9_]{1,79}$
+UserStatus        = "pending_verification"|"pending_approval"|"active"|"suspended"|"rejected"|"deleted"
 LoginRequest      = {identifier: string[1..320], password: string[1..128]}
 RegisterRequest   = {username: string[3..64], email: EmailStr, display_name?: string[1..120], password: string[12..128]}
 RegisterResponse  = {message: "If registration can proceed, check your email", status_token: string, status_token_expires_in: 604800}
@@ -913,102 +926,181 @@ ResendVerificationRequest = {email: EmailStr}
 ForgotPasswordRequest = {email: EmailStr}
 ResetPasswordRequest = {token: string, new_password: string[12..128]}
 TokenResponse     = {access_token: string, token_type: "bearer", expires_in: 600, user: UserMe}
-UserMe            = {id, username, email, status, must_change_password, profile: UserProfile, preferences: UserPreferences, roles: RoleSummary[], permissions: string[], auth_version, row_version}
-UserProfile       = {user_id, display_name, row_version}
-UserProfilePatch  = {display_name?: string[1..120]|null, row_version: integer}
-UsernameChange    = {new_username: string[3..64], current_password: string[1..128], row_version: integer}
-AdminUsernameChange = {new_username: string[3..64], reauth_password: string[1..128], row_version: integer}
+UserMe            = {id: UUID, username: Username, email: EmailStr, status: UserStatus, must_change_password: boolean, profile: UserProfile, preferences: UserPreferences, roles: RoleSummary[], permissions: string[], auth_version: integer[1..], row_version: RowVersion}
+UserProfile       = {user_id: UUID, display_name: string[1..120]|null, row_version: RowVersion}
+UserProfilePatch  = {display_name?: string[1..120]|null, row_version: RowVersion}
+UsernameChange    = {new_username: string[3..64], current_password: string[1..128], row_version: RowVersion}
+AdminUsernameChange = {new_username: string[3..64], reauth_password: string[1..128], row_version: RowVersion}
 EmailChangeRequest = {new_email: EmailStr, current_password: string[1..128]}
 AdminEmailChangeRequest = {new_email: EmailStr, reauth_password: string[1..128]}
 EmailChangeConfirm = {token: string}
-UserPreferences  = {theme_mode: "system"|"light"|"dark", theme_palette: "default"|"eye_care"|"sepia"|"forest", contrast_mode: "system"|"standard"|"high", density: "comfortable"|"compact", motion_mode: "system"|"reduced", time_zone: string, page_size: 20|50|100, row_version: integer}
-UserPreferencesPatch = {theme_mode?, theme_palette?, contrast_mode?, density?, motion_mode?, time_zone?, page_size?, row_version: integer}
-RoleSummary       = {id, code, name}
-UserCreate        = {username, email, display_name?, password, role_ids: UUID[]}
-AdminUserProfilePatch = {display_name?: string[1..120]|null, row_version: integer}
-UserRoleReplace   = {role_ids: UUID[], row_version: integer}
-PasswordReset     = {new_password, row_version: integer}
-ChangePassword    = {current_password, new_password}
-RoleCreate        = {code, name, description?}
-RolePatch         = {name?, description?, is_active?, row_version: integer}
-RolePermissionReplace = {permission_ids: UUID[], row_version: integer}
+UserPreferences  = {theme_mode: "system"|"light"|"dark", theme_palette: "default"|"eye_care"|"sepia"|"forest", contrast_mode: "system"|"standard"|"high", density: "comfortable"|"compact", motion_mode: "system"|"reduced", time_zone: string[1..64], page_size: 20|50|100, row_version: RowVersion}
+UserPreferencesPatch = {theme_mode?, theme_palette?, contrast_mode?, density?, motion_mode?, time_zone?, page_size?, row_version: RowVersion}
+RoleSummary       = {id: UUID, code: RoleCode, name: string[1..120]}
+UserCreate        = {username: Username, email: EmailStr, display_name?: string[1..120]|null, password: NewPassword, role_ids: UUID[]}
+AdminUserProfilePatch = {display_name?: string[1..120]|null, row_version: RowVersion, profile_row_version: RowVersion}
+UserRoleReplace   = {role_ids: UUID[], row_version: RowVersion}
+PasswordReset     = {new_password: NewPassword, row_version: RowVersion}
+ChangePassword    = {current_password: CurrentPassword, new_password: NewPassword}
+VersionedAction   = {row_version: RowVersion}
+RoleCreate        = {code: RoleCode, name: string[1..120], description?: string[0..500]|null}
+RolePatch         = {name?: string[1..120], description?: string[0..500]|null, is_active?: boolean, row_version: RowVersion}
+RolePermissionReplace = {permission_ids: UUID[], row_version: RowVersion}
 BackupCreate      = {label?: string[1..120], retention_days: integer[1..3650]}
-RestoreCreate     = {backup_id: UUID, target_database: string[1..120], reauth_password: string, confirmation: "RESTORE TO NEW DATABASE"}
+RestoreCreate     = {backup_id: UUID, target_database: string[1..120], reauth_password: CurrentPassword, confirmation: "RESTORE TO NEW DATABASE"}
 ClientErrorEvent  = {event_id: UUID, occurred_at: datetime, level: "warning"|"error", event_type: "react_error_boundary"|"unhandled_error"|"unhandled_rejection"|"api_failure", route_name: string[1..120], client_release: string[1..80], error_name: string[1..120], sanitized_message?: string[1..500], sanitized_stack?: string[1..8000], request_id?: UUID}
 ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 ```
 
+- 所有 `row_version`（含 `profile_row_version`）均为 `RowVersion`。`UserPreferencesPatch` 字段继承 `UserPreferences` 中的类型/枚举，`time_zone` 为 string[1..64] 且必须通过 IANA 校验；更新后的完整对象作为响应。
+- `VersionedAction` 用于用户 approve/reject/suspend/activate/delete 和角色 delete。用户资料管理 PATCH 同时校验 users 与 user_profiles 版本并递增两者；本人 Profile/Preferences PATCH 只校验并递增各自版本。用户 username 修改、管理员密码重置、角色替换使用 users 版本；角色 PATCH/权限替换使用 roles 版本。其他已有对象的用户/角色写入也须在事务中递增对应版本；本人改密和一次性 token 流程采用密码/token 校验与行锁，不另要求旧版本，创建没有旧版本。会话撤销和备份/恢复状态转换不虚构表结构中不存在的 row_version。
 - 密码长度、泄露密码检查等完整规则集中在一个 policy 模块；API schema 只做基本边界校验。
 - 默认 `page=1,size=20`，最大 `size=100`；未知 sort/filter 返回 422，禁止把客户端字符串直接拼入 SQL。
 - 日期筛选使用 ISO 8601 UTC；列表默认按 `created_at DESC, id DESC` 稳定排序。
-- Admin user/role 响应必须包含 `row_version`，更新成功后返回新版本。
-- CSV 导出默认最多 10,000 行；更大导出属于未来异步任务，本阶段返回明确 422/413，不在请求中无限流式查询。
+- Admin user/role JSON 响应必须包含 `row_version`，更新成功后返回新版本；显式 204 的安全动作/删除无响应体，客户端如需继续操作必须重新 GET。
+- CSV 导出默认最多 10,000 行；更大导出属于未来异步任务，本阶段返回 422 `VALIDATION_ERROR`，不在请求中无限流式查询。
+
+### 公共响应模型与输出白名单
+
+以下响应对象字段全部必返，可空值用 null，不随 ORM 加字段自动扩展。`datetime` 为 ISO 8601 UTC；列表统一 `Page<T>`，`pages=ceil(total/size)`，空列表 pages=0。输出使用独立 Pydantic response model 并生成 OpenAPI，不用直接 ORM 序列化或仅靠 include/exclude 隐藏秘密。枚举必须在 OpenAPI 完整展开；下文引用第 5 节 CHECK 的枚举表示精确继承其值。
+
+```text
+Page<T>           = {items: T[], total: integer[0..], page: integer[1..], size: integer[1..100], pages: integer[0..]}
+MessageResponse   = {message: "Request accepted"}
+AdminUser         = {id: UUID, username: Username, email: EmailStr, status: UserStatus, must_change_password: boolean, email_verified_at: datetime|null, approved_at: datetime|null, approved_by: UUID|null, locked_until: datetime|null, last_login_at: datetime|null, created_at: datetime, updated_at: datetime, deleted_at: datetime|null, row_version: RowVersion, profile: UserProfile, roles: RoleSummary[]}
+Role              = {id: UUID, code: RoleCode, name: string[1..120], description: string[0..500]|null, is_system: boolean, is_active: boolean, row_version: RowVersion, permission_ids: UUID[], created_at: datetime, updated_at: datetime}
+Permission        = {id: UUID, code: string[1..120], resource: string[1..80], action: string[1..40], category: string[1..80], description: string[0..500]}
+PermissionGroup   = {category: string[1..80], items: Permission[]}
+PermissionCatalog = {groups: PermissionGroup[]}
+Session           = {id: UUID, user_id: UUID, current: boolean, ip_masked: string|null, device_summary: string[1..255]|null, created_at: datetime, last_used_at: datetime|null, expires_at: datetime}
+LoginEventType    = 第 5 节 ck_login_history_event 的完整枚举
+LoginHistoryEntry = {id: UUID, created_at: datetime, event_type: LoginEventType, result: "success"|"failure", device_summary: string[1..255]|null, ip_masked: string|null}
+AdminLoginHistoryEntry = LoginHistoryEntry + {user_id: UUID|null, identifier_masked: string[1..320]|null, failure_reason_code: string[1..80]|null, ip_address: string|null, user_agent: string[1..1000]|null, request_id: UUID}
+AuditChange       = {field: string[1..120], before: string|number|boolean|null|string[], after: string|number|boolean|null|string[]}
+ActionHistoryEntry = {id: UUID, actor_user_id: UUID|null, actor_type: "user"|"system"|"worker", action: string[1..120], target_type: string[1..80], target_id: string[1..120]|null, result: "success"|"failure", http_method: string[1..10]|null, path: string[1..500]|null, status_code: integer[100..599]|null, request_id: UUID, ip_address: string|null, user_agent: string[1..1000]|null, changes: AuditChange[], created_at: datetime}
+BackupStatus      = 第 5 节 ck_backup_artifacts_status 的完整枚举
+BackupManifest    = {format_version: string, source_database: string[1..120], source_pg_version: string, pg_dump_version: string, application_version: string, git_sha: string, alembic_revision: string, created_at: datetime, object_count: integer[0..], archive_sha256: string[64], required_extensions: string[], signature_algorithm: "Ed25519", signing_key_id: string}
+BackupArtifact    = {id: UUID, created_by: UUID|null, status: BackupStatus, format: "pg_dump_custom_v1", source_database: string[1..120], source_postgres_version: string, application_version: string, alembic_revision: string, size_bytes: integer[0..]|null, sha256: string[64]|null, object_count: integer[0..]|null, encrypted: boolean, manifest: BackupManifest|null, error_code: string|null, error_message: string[1..1000]|null, started_at: datetime|null, completed_at: datetime|null, retention_until: datetime|null, created_at: datetime}
+VerificationCheck = {name: "signature"|"checksum"|"toc"|"compatibility"|"alembic"|"catalog"|"rbac"|"api_smoke"|"pg_amcheck"|"session_invalidation"|"maintenance_invalidation", status: "passed"|"failed"|"skipped", message: string[1..500]|null}
+VerificationReport = {status: "passed"|"failed", checked_at: datetime, checks: VerificationCheck[]}
+RestoreStatus     = 第 5 节 ck_restore_runs_status 的完整枚举
+CutoverRunbook    = {target_database: string[1..120], steps: string[], rollback_steps: string[]}
+RestoreRun        = {id: UUID, backup_id: UUID, requested_by: UUID|null, status: RestoreStatus, strategy: "restore_to_new_database", target_database: string[1..120], safety_backup_id: UUID|null, verification: VerificationReport|null, cutover_runbook: CutoverRunbook|null, error_code: string|null, error_message: string[1..1000]|null, requested_at: datetime, started_at: datetime|null, completed_at: datetime|null}
+LiveResponse      = {status: "ok"}
+ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "ok"|"failed", redis: "ok"|"failed", rbac_invariants: "ok"|"failed"}, capabilities: {self_registration_enabled: boolean, require_email_verification: boolean, require_admin_approval: boolean}}
+```
+
+- `Session.id` 是 family UUID；列表仅含当前有效 family，每个 family 一条。created_at 为最初登录时间，last_used_at 为 family 最大使用时间，expires_at/IP/设备取当前有效后继；current 相对调用者 JWT sid。本人列表也使用 `Page<Session>`，不能暴露 rotation 行 id、token/CSRF hash。
+- 本人历史只返回 `LoginHistoryEntry`；内部失败原因、完整 IP 和原始 user-agent 只供有权限的管理员响应。IPv4 脱敏为 /24、IPv6 为 /48 网络前缀；设备摘要由解析后的浏览器/OS 名称构成。CSV 列按对应 AdminLoginHistoryEntry/ActionHistoryEntry 顶层字段顺序固定，changes 用脱敏 JSON 字符串编码并防 CSV 公式注入。
+- `changes` 只映射第 12 节允许字段；metadata 不公开。备份 manifest 响应只投影上述字段，签名仍验证 bundle 原始字节；storage_key、encryption_key_id、原始 stderr、连接串及内部对象位置不公开。error_message、报告和 runbook 均须脱敏，runbook 只引用凭据变量，不包含取值。未有报告/runbook 时为 null，ready_for_cutover 必须已有通过报告与非空 runbook。
+- 校验报告检查项不得重复，必需项未执行不能判 passed；备份校验必需 signature/checksum/toc/compatibility，恢复验证另要求 alembic/catalog/rbac/api_smoke/session_invalidation/maintenance_invalidation，pg_amcheck 可选。操作性故障使用错误响应；完成校验但发现不可信/不兼容对象返回 200 的 failed 报告，绝不能据此允许恢复。
+- readiness 在 PostgreSQL 或 RBAC 不变量失败时返回 503 + `ReadyResponse`，正常为 200；仅 Redis 失败时返回 200/degraded 并按已有 fail-closed 规则处理依赖 Redis 的接口。健康响应不公开版本、主机名、连接信息或错误堆栈。
 
 ### Auth 与本人接口
 
-| Method | Path | 权限 | 成功状态 | 说明 |
-|---|---|---|---:|---|
-| POST | `/auth/register` | Public | 202 | 返回固定 `RegisterResponse`；新注册和既有标识均签发不可枚举的 status token |
-| POST | `/auth/verify-email` | Public | 200 | 消费 token，进入 pending_approval 或 active |
-| POST | `/auth/resend-verification` | Public | 202 | 通用响应、限流、旧 token 失效 |
-| GET | `/auth/registration-status` | Public + opaque status token header | 200 | 从 `X-Registration-Status-Token` 读取；只返回本次注册的有限状态 |
-| POST | `/auth/forgot-password` | Public | 202 | 无论 email 是否存在均通用响应 |
-| POST | `/auth/reset-password` | Public + one-time token | 204 | 修改密码、撤销会话、token 单次消费 |
-| POST | `/auth/login` | Public | 200 | body: identifier/password；返回 access token + user，设置 refresh cookie |
-| POST | `/auth/refresh` | Refresh cookie | 200 | rotation |
-| POST | `/auth/logout` | Refresh cookie + CSRF/Origin | 204 | 撤销当前 refresh family/session 并清 cookie |
-| POST | `/auth/logout-all` | Authenticated | 204 | 撤销用户全部 session，auth_version +1 |
-| GET | `/auth/me` | Authenticated | 200 | 身份、Profile、Preferences、角色、权限、版本；登录后的偏好权威来源 |
-| POST | `/auth/confirm-email-change` | Public + one-time token | 204 | 确认目标邮箱、撤销全部会话；不可枚举 |
-| GET/PATCH | `/me/profile` | Authenticated | 200 | 读取/更新本人 display name；带 profile row_version |
-| POST | `/me/change-username` | Authenticated + current password | 204 | 修改 username、撤销全部会话、要求重新登录 |
-| POST | `/me/change-email/request` | Authenticated + current password | 202 | 向新邮箱发确认、向旧邮箱发安全通知 |
-| GET/PATCH | `/me/preferences` | Authenticated | 200 | 读取/部分更新本人偏好；带 preference row_version |
-| POST | `/me/change-password` | Authenticated | 204 | current/new password；撤销全部 session、清 Cookie，重新登录 |
-| GET | `/me/sessions` | `sessions.read_own` | 200 | 当前用户会话，标明 current |
-| DELETE | `/me/sessions/{id}` | `sessions.revoke_own` | 204 | 只能撤销本人 session |
-| GET | `/me/login-history` | `login_history.read_own` | 200 | 只能读取本人记录 |
-| POST | `/telemetry/client-errors` | Public + exact Origin + rate limit | 202 | 严格 allowlist 的前端错误批次；可选 access token 只由后端附加 actor id，不写业务表 |
+| Method | Path | 权限 | 成功状态 | 响应 | 说明 |
+|---|---|---|---|---|---|
+| POST | `/auth/register` | Public | 202 | `RegisterResponse` | 返回固定 `RegisterResponse`；新注册和既有标识均签发不可枚举的 status token |
+| POST | `/auth/verify-email` | Public | 200 | `MessageResponse` | 消费 token，进入 pending_approval 或 active |
+| POST | `/auth/resend-verification` | Public | 202 | `MessageResponse` | 通用响应、限流、旧 token 失效 |
+| GET | `/auth/registration-status` | Public + opaque status token header | 200 | `RegistrationStatusResponse` | 从 `X-Registration-Status-Token` 读取；只返回本次注册的有限状态 |
+| POST | `/auth/forgot-password` | Public | 202 | `MessageResponse` | 无论 email 是否存在均通用响应 |
+| POST | `/auth/reset-password` | Public + one-time token | 204 | 无 | 修改密码、撤销会话、token 单次消费 |
+| POST | `/auth/login` | Public | 200 | `TokenResponse` | body: identifier/password；返回 access token + user，设置 refresh cookie |
+| POST | `/auth/refresh` | Refresh cookie | 200 | `TokenResponse` | rotation |
+| POST | `/auth/logout` | Refresh cookie + CSRF/Origin | 204 | 无 | 撤销当前 refresh family/session 并清 cookie |
+| POST | `/auth/logout-all` | Authenticated | 204 | 无 | 撤销用户全部 session，auth_version +1 |
+| GET | `/auth/me` | Authenticated | 200 | `UserMe` | 身份、Profile、Preferences、角色、权限、版本；登录后的偏好权威来源 |
+| POST | `/auth/confirm-email-change` | Public + one-time token | 204 | 无 | 确认目标邮箱、撤销全部会话；不可枚举 |
+| GET/PATCH | `/me/profile` | Authenticated | 200 | `UserProfile` | 读取/更新本人 display name；带 profile row_version |
+| POST | `/me/change-username` | Authenticated + current password | 204 | 无 | 修改 username、撤销全部会话、要求重新登录 |
+| POST | `/me/change-email/request` | Authenticated + current password | 202 | `MessageResponse` | 向新邮箱发确认、向旧邮箱发安全通知 |
+| GET/PATCH | `/me/preferences` | Authenticated | 200 | `UserPreferences` | 读取/部分更新本人偏好；带 preference row_version |
+| POST | `/me/change-password` | Authenticated | 204 | 无 | current/new password；撤销全部 session、清 Cookie，重新登录 |
+| GET | `/me/sessions` | `sessions.read_own` | 200 | `Page<Session>` | 当前用户会话，标明 current |
+| DELETE | `/me/sessions/{id}` | `sessions.revoke_own` | 204 | 无 | 只能撤销本人 session |
+| GET | `/me/login-history` | `login_history.read_own` | 200 | `Page<LoginHistoryEntry>` | 只能读取本人记录 |
+| POST | `/telemetry/client-errors` | Public + exact Origin + rate limit | 202 | `MessageResponse` | 严格 allowlist 的前端错误批次；可选 access token 只由后端附加 actor id，不写业务表 |
 
 ### 管理接口
 
-| Method | Path | 权限 | 说明 |
-|---|---|---|---|
-| GET/POST | `/admin/users` | `users.read/create` | 分页筛选 / 创建 |
-| GET | `/admin/users/pending` | `users.read` | pending_approval 分页列表 |
-| GET/PATCH | `/admin/users/{id}` | `users.read/update` | 详情 / 仅更新 Profile；返回 user/profile 两个 row_version |
-| POST | `/admin/users/{id}/change-username` | `users.update` + recent reauth | 修改登录名、撤销会话、通知与审计 |
-| POST | `/admin/users/{id}/request-email-change` | `users.update` + recent reauth | 只能发起目标邮箱验证，不能直接改 email |
-| POST | `/admin/users/{id}/approve` | `users.approve` | 仅 pending_approval；进入 active |
-| POST | `/admin/users/{id}/reject` | `users.reject` | 仅 pending_approval；进入 rejected |
-| POST | `/admin/users/{id}/suspend` | `users.suspend` | 停用并撤销会话 |
-| POST | `/admin/users/{id}/activate` | `users.activate` | 仅 suspended → active；不用于 deleted/rejected/locked |
-| DELETE | `/admin/users/{id}` | `users.delete` | 软删除 |
-| POST | `/admin/users/{id}/reset-password` | `users.reset_password` | 重置并撤销会话 |
-| PUT | `/admin/users/{id}/roles` | `users.manage_roles` | body: role_ids + row_version，集合替换 |
-| GET/POST | `/admin/roles` | `roles.read/create` | 列表 / 创建 |
-| GET/PATCH/DELETE | `/admin/roles/{id}` | 对应 roles 权限 | 系统角色受保护 |
-| PUT | `/admin/roles/{id}/permissions` | `roles.manage_permissions` | permission_ids + row_version，集合替换 |
-| GET | `/admin/permissions` | `permissions.read` | 分组只读目录 |
-| GET | `/admin/sessions` | `sessions.read` | 分页筛选 |
-| DELETE | `/admin/sessions/{id}` | `sessions.revoke` | 撤销任意会话 |
-| GET | `/admin/login-history` | `login_history.read` | 分页筛选 |
-| GET | `/admin/login-history/export` | `login_history.export` | 流式 CSV，限制范围和行数 |
-| GET | `/admin/action-history` | `action_history.read` | 分页筛选 |
-| GET | `/admin/action-history/export` | `action_history.export` | 流式 CSV，限制范围和行数 |
-| GET/POST | `/admin/backups` | `system.backup` | 分页列表 / 创建完整整库备份，POST 返回 202 |
-| GET | `/admin/backups/{id}` | `system.backup` | 状态、manifest、checksum、脱敏错误 |
-| GET | `/admin/backups/{id}/download` | `system.backup` | 下载 completed `${BACKUP_EXTENSION}` bundle；禁止代理缓存 |
-| DELETE | `/admin/backups/{id}` | `system.backup` | 删除 artifact；active restore 引用时 409 |
-| POST | `/admin/backups/import` | `system.restore` | multipart 导入 `${BACKUP_EXTENSION}` bundle，流式限量写入并校验，返回 202 |
-| POST | `/admin/backups/{id}/validate` | `system.restore` | checksum/Ed25519/TOC/compatibility 校验，返回报告 |
-| POST | `/admin/restores` | `system.restore` | 最近重新认证 + 固定确认短语；创建 restore-to-new-db，返回 202 |
-| GET | `/admin/restores` | `system.restore` | restore run 分页列表 |
-| GET | `/admin/restores/{id}` | `system.restore` | 状态、验证报告与 cutover runbook |
-| GET | `/health/live` | Public | 只表示进程存活 |
-| GET | `/health/ready` | Internal/Public by deploy | 检查 PostgreSQL；Redis 状态单独展示 |
+同一行多个 Method 的状态码和响应按顺序对应；204 始终无响应体，JSON 响应为 application/json。管理写请求按上述 DTO 与重新认证规则构造，不能把响应对象整体回传作 PATCH。
+
+| Method | Path | 权限 | 成功状态 | 响应 | 说明 |
+|---|---|---|---|---|---|
+| GET/POST | `/admin/users` | `users.read/create` | 200 / 201 | `Page<AdminUser>` / `AdminUser` | 分页筛选 / 创建 |
+| GET | `/admin/users/pending` | `users.read` | 200 | `Page<AdminUser>` | pending_approval 分页列表 |
+| GET/PATCH | `/admin/users/{id}` | `users.read/update` | 200 / 200 | `AdminUser` / `AdminUser` | 详情 / 仅更新 Profile；返回 user/profile 两个 row_version |
+| POST | `/admin/users/{id}/change-username` | `users.update` + recent reauth | 204 | 无 | 修改登录名、撤销会话、通知与审计 |
+| POST | `/admin/users/{id}/request-email-change` | `users.update` + recent reauth | 202 | `MessageResponse` | 只能发起目标邮箱验证，不能直接改 email |
+| POST | `/admin/users/{id}/approve` | `users.approve` | 200 | `AdminUser` | 仅 pending_approval；进入 active |
+| POST | `/admin/users/{id}/reject` | `users.reject` | 200 | `AdminUser` | 仅 pending_approval；进入 rejected |
+| POST | `/admin/users/{id}/suspend` | `users.suspend` | 200 | `AdminUser` | 停用并撤销会话 |
+| POST | `/admin/users/{id}/activate` | `users.activate` | 200 | `AdminUser` | 仅 suspended → active；不用于 deleted/rejected/locked |
+| DELETE | `/admin/users/{id}` | `users.delete` | 204 | 无 | 软删除 |
+| POST | `/admin/users/{id}/reset-password` | `users.reset_password` | 200 | `AdminUser` | 重置并撤销会话 |
+| PUT | `/admin/users/{id}/roles` | `users.manage_roles` | 200 | `AdminUser` | body: role_ids + row_version，集合替换 |
+| GET/POST | `/admin/roles` | `roles.read/create` | 200 / 201 | `Page<Role>` / `Role` | 列表 / 创建 |
+| GET/PATCH/DELETE | `/admin/roles/{id}` | 对应 roles 权限 | 200 / 200 / 204 | `Role` / `Role` / 无 | 系统角色受保护 |
+| PUT | `/admin/roles/{id}/permissions` | `roles.manage_permissions` | 200 | `Role` | permission_ids + row_version，集合替换 |
+| GET | `/admin/permissions` | `permissions.read` | 200 | `PermissionCatalog` | 分组只读目录 |
+| GET | `/admin/sessions` | `sessions.read` | 200 | `Page<Session>` | 分页筛选 |
+| DELETE | `/admin/sessions/{id}` | `sessions.revoke` | 204 | 无 | 撤销任意会话 |
+| GET | `/admin/login-history` | `login_history.read` | 200 | `Page<AdminLoginHistoryEntry>` | 分页筛选 |
+| GET | `/admin/login-history/export` | `login_history.export` | 200 | `text/csv` | 流式 CSV，限制范围和行数 |
+| GET | `/admin/action-history` | `action_history.read` | 200 | `Page<ActionHistoryEntry>` | 分页筛选 |
+| GET | `/admin/action-history/export` | `action_history.export` | 200 | `text/csv` | 流式 CSV，限制范围和行数 |
+| GET/POST | `/admin/backups` | `system.backup` | 200 / 202 | `Page<BackupArtifact>` / `BackupArtifact` | 分页列表 / 创建完整整库备份，POST 返回 202 |
+| GET | `/admin/backups/{id}` | `system.backup` | 200 | `BackupArtifact` | 状态、manifest、checksum、脱敏错误 |
+| GET | `/admin/backups/{id}/download` | `system.backup` | 200 | `application/octet-stream` | 下载 completed `${BACKUP_EXTENSION}` bundle；禁止代理缓存 |
+| DELETE | `/admin/backups/{id}` | `system.backup` | 204 | 无 | 删除 artifact；active restore 引用时 409 |
+| POST | `/admin/backups/import` | `system.restore` | 202 | `BackupArtifact` | multipart 导入 `${BACKUP_EXTENSION}` bundle，流式限量写入并校验，返回 202 |
+| POST | `/admin/backups/{id}/validate` | `system.restore` | 200 | `VerificationReport` | checksum/Ed25519/TOC/compatibility 校验，返回报告 |
+| POST | `/admin/restores` | `system.restore` | 202 | `RestoreRun` | 最近重新认证 + 固定确认短语；创建 restore-to-new-db，返回 202 |
+| GET | `/admin/restores` | `system.restore` | 200 | `Page<RestoreRun>` | restore run 分页列表 |
+| GET | `/admin/restores/{id}` | `system.restore` | 200 | `RestoreRun` | 状态、验证报告与 cutover runbook |
+| GET | `/health/live` | Public | 200 | `LiveResponse` | 只表示进程存活 |
+| GET | `/health/ready` | Internal/Public by deploy | 200（不可用 503） | `ReadyResponse` | 检查 PostgreSQL；Redis 状态单独展示 |
 
 认证失败 401；已认证但无权限 403；资源不存在 404；唯一冲突或版本冲突 409；校验错误 422；限流 429。不要把这些状态混用。
+
+### 固定错误码目录
+
+下表为 Phase 1 API 错误码目录，OpenAPI 的 `error.code` 必须使用同一枚举；新增错误码须先更新此表和对应测试，不得在路由中临时起名。`error.message` 是脱敏展示文案，客户端只依赖 code；`details` 固定为 null，`request_id` 为 UUID。日志内部 failure_reason_code、异步备份/恢复的 error_code 不直接复制为公共 API 错误码；应在生成工程中另登记维护任务错误目录及脱敏消息映射。
+
+| 错误码 | HTTP | 触发条件 |
+|---|---:|---|
+| `AUTHENTICATION_FAILED` | 401 | 登录失败、临时锁定或不允许登录；外部文案与响应形状一致，具体原因只写受控历史 |
+| `SESSION_INVALID` | 401 | access/refresh 缺失、无效、到期、撤销、版本失效或 refresh reuse；沿用会话撤销规则 |
+| `REAUTHENTICATION_FAILED` | 401 | 当前密码或本次重新认证密码错误；缺失必填字段仍为 422 |
+| `PERMISSION_DENIED` | 403 | 已认证但缺少 endpoint permission，或无权访问他人会话 |
+| `PRIVILEGED_ACCOUNT_PROTECTED` | 403 | 命中第 6 节特权账户保护 |
+| `ROLE_GRANT_FORBIDDEN` | 403 | 角色授予/修改超出调用者可授予范围 |
+| `CSRF_VALIDATION_FAILED` | 403 | 要求的 Origin/Referer/CSRF 校验失败 |
+| `PASSWORD_CHANGE_REQUIRED` | 403 | must_change_password 用户访问允许清单之外的接口 |
+| `REGISTRATION_DISABLED` | 403 | 配置关闭自助注册；与输入账号是否存在无关 |
+| `RESOURCE_NOT_FOUND` | 404 | 已通过必要鉴权后资源不存在 |
+| `VERSION_CONFLICT` | 409 | 已认证且有权限的请求携带过期 row_version |
+| `UNIQUE_CONFLICT` | 409 | 允许公开冲突的管理创建/username 修改发生唯一冲突；不用于自助注册或邮箱占用枚举 |
+| `IDEMPOTENCY_KEY_CONFLICT` | 409 | 同 actor/method/path/key 的请求指纹不同 |
+| `IDEMPOTENCY_IN_PROGRESS` | 409 | 相同幂等请求仍在处理；附 Retry-After |
+| `SYSTEM_ROLE_PERMISSIONS_IMMUTABLE` | 409 | 尝试替换 super_admin 权限集合 |
+| `SYSTEM_ROLE_PROTECTED` | 409 | 删除系统角色或修改 super_admin 的名称/启用状态 |
+| `LAST_SUPER_ADMIN_REQUIRED` | 409 | 操作将破坏至少一个 active super-admin 的不变量 |
+| `SELF_GOVERNANCE_FORBIDDEN` | 409 | 尝试停用或删除自己 |
+| `STATE_CONFLICT` | 409 | 非法状态转换、删除仍被引用的角色、下载未完成备份或恢复目标数据库已存在 |
+| `BACKUP_IN_USE` | 409 | 删除仍被 active restore 引用或仍处 safety backup 保护期的 artifact |
+| `REGISTRATION_STATUS_EXPIRED` | 410 | 注册状态 token 无效或过期（含 decoy） |
+| `ONE_TIME_TOKEN_INVALID` | 410 | 一次性 token 无效、过期、已消费，或确认邮箱变更无法完成；统一文案，不暴露邮箱占用原因 |
+| `PAYLOAD_TOO_LARGE` | 413 | 请求体、导入文件超过配置大小上限 |
+| `VALIDATION_ERROR` | 422 | 字段/版本缺失、长度/格式/枚举/null 错误、未知字段/sort/filter、确认短语不匹配或导出超过行数限制 |
+| `PASSWORD_POLICY_VIOLATION` | 422 | 新密码未通过统一策略；不返回历史密码或泄露库原始数据 |
+| `BACKUP_INVALID` | 422 | 导入或恢复 preflight 的格式、签名、checksum、TOC、信任或兼容性检查失败；无目标库副作用 |
+| `RATE_LIMITED` | 429 | 用户/IP 限流；附 Retry-After |
+| `SERVICE_UNAVAILABLE` | 503 | 依赖不可用，不能安全接受操作；可重试时附 Retry-After |
+| `INTERNAL_ERROR` | 500 | 未预期服务器错误，包括响应模型校验失败；不泄露异常细节 |
+
+鉴权失败不能被版本冲突或对象状态抢先覆盖。自助 register/resend/forgot/email-change request 的既有通用响应优先，不可枚举策略不能因错误码细分而改变。`/health/ready` 的 503 使用上文 `ReadyResponse`，是错误 envelope 的明确例外。第 9 节未来 AI 队列的过载和任务错误码由后续业务契约确定，不在 Phase 1 新增任务 API。
 
 ## 11. UI 信息架构
 
@@ -1186,6 +1278,7 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `CON-002` Given 相同 key 但不同 request hash，Then 409，原结果不被覆盖。
 - `SES-001` Given 用户撤销自己的其他 family，Then 204，该 family 的 access/refresh 均不可用，本 family 仍有效；旧 rotation 行 id 不能作为另一条可绕过的会话。
 - `SES-002` Given 用户撤销他人 session，Then 403。
+- `SES-003` Given 正常 rotation，Then sid 不变、会话列表仍只有一条；Given family 撤销或到期，Then 旧 access 立即被拒绝，即使 Redis 中仍有权限缓存。
 - `HIS-001` 每种登录事件字段符合表约束，未知用户失败登录允许 user_id NULL。
 - `HIS-002` 关键管理动作产生一条 action history，actor/target/result/request_id 正确。
 - `HIS-003` 事务失败不产生 success action；敏感字段不出现在 changes/metadata。
@@ -1229,6 +1322,7 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `BKP-013` Given backup 正被 restore 引用或 safety backup 仍在保护期，When 删除/retention job，Then 409/跳过；过期且无引用时才删除对象文件并保留脱敏审计。
 - `BKP-014` 每月 restore drill 使用隔离数据库真实恢复最近备份；只运行 `pg_restore --list` 不算恢复演练成功。
 - `BKP-015` Given source database 名为 A、请求 target database 名为 B，When 常规或 break-glass 恢复，Then archive 不含 CREATE DATABASE、实际只创建/写入 B、从不创建/drop A，所有 pg_restore 命令均不使用 `--create/-C`。
+- `BKP-016` Given 离线 break-glass 原名重建，When 目标全名或 RESTORE ORIGINAL DATABASE 确认短语缺失/错误（含 API 短语），Then 在终止连接或修改数据库前退出；正确确认仍必须先成功创建 safety backup 再 quarantine，任一步失败保留既有恢复证据。
 
 ### API 契约
 
@@ -1239,6 +1333,10 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `API-005` 所有用户/session/history 响应均不含 hash、token、Cookie 和敏感 metadata。
 - `API-006` OpenAPI 中每个 operationId 在 endpoint matrix 中恰好出现一次且引用的测试 ID 存在；反向也不能有已删除 endpoint 的孤儿记录。
 - `API-007` 对每个 endpoint 运行参数化 happy/401/403/422/404-or-409 用例，并校验响应 JSON 符合 OpenAPI schema。
+- `API-008` Given 每个管理/本人接口的成功结果，Then 状态码和响应模型与第 10 节一致，204 无 body；ORM 附加 canary 秘密字段不出现在 JSON/CSV/OpenAPI 中，本人历史不包含管理员专用字段，响应校验失败只返回脱敏 500。
+- `API-009` Given 同一用户/角色版本的两个并发更新，Then 最多一个成功、另一个为 VERSION_CONFLICT；删除仍存在的目标时也校验旧版本，已被物理删除的角色返回 404。仅传 version/If-Match 或缺任一必需版本时为 422。管理员 Profile PATCH 任一表版本过期均不得部分更新，成功同时返回两张表的新版本。
+- `API-010` Given 角色名称/描述、密码、reauth_password 的边界值和 PATCH 省略/null，Then 按声明接受或返回 422，省略不清空，非法 null 不写库；管理员创建/重置仅使用所提交临时密码，其明文不出现在响应/幂等结果/邮件/日志/审计。
+- `API-011` Given 已登记错误场景，Then code/HTTP/envelope 与目录一致，processing 固定 409 + Retry-After；自助注册和邮件流程不因唯一冲突或错误细分泄露账户存在性，readiness 503 使用固定健康响应。
 
 ### 前端与 E2E
 
@@ -1259,7 +1357,6 @@ ClientErrorBatch  = {events: ClientErrorEvent[1..20]}
 - `FE-015` high contrast、comfortable/compact、reduced motion 都改变真实 UI；OS reduced-motion 始终胜出，Preferences 保存 409/网络失败时预览回滚并可重试。
 
 - `FE-016` Given 同一 browser context 中两个标签页 access 过期，When 同时请求 API，Then refresh 串行完成、无误判 reuse、两页均可继续访问；一页退出/改密后另一页清空身份，迟到响应不得恢复登录。rotation 响应丢失时不得自动重放旧 token。
-- `SES-003` Given 正常 rotation，Then sid 不变、会话列表仍只有一条；Given family 撤销或到期，Then 旧 access 立即被拒绝，即使 Redis 中仍有权限缓存。
 
 ### 部署与并发烟雾测试
 
@@ -1746,7 +1843,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 - 所有编号测试有真实代码且实际执行通过；报告实际结果和基础负载指标。
 - OpenAPI 中每个 endpoint 都被 endpoint matrix 和自动化测试覆盖，完整 Podman 栈的黑盒 smoke 通过。
 - `scripts/check_ports.py` 在 CI 中通过；合并后的 Compose 配置及所有开发/测试服务不存在 `30000–39999` 之外或未登记的宿主机监听端口，启动前端口占用检查有自动化测试。
-- 没有实现任何学习、LLM、Vocab 或其他业务功能。
+- 没有实现任何学习、AI 推理、内容生成或其他具体业务功能；多用户 AI 与长任务边界仅记录于 ADR。
 
 最终回复必须列出关键文件、migration revision、seed 命令、启动命令、测试命令与实际结果、架构决策、已知限制和需要轮换的凭据。不得用“理论上可运行”代替验证。
 
@@ -1771,3 +1868,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 2026-09-06（v1.16）通过 Context7 核对 [mkcert 官方说明](https://github.com/FiloSottile/mkcert/blob/master/README.md)：`-install` 安装本机 CA 信任，`TRUST_STORES` 选择目标信任库，`-uninstall` 撤销对应信任；Firefox 安装后需要重启。第 14 节的分阶段验证和失败门禁是本项目验收要求，不从证书生成或容器测试结果推断宿主机已受信。
 
 2026-09-06（v1.17）通过 Context7 核对 [Compose 多文件合并](https://github.com/docker/docs/blob/main/content/manuals/compose/how-tos/multiple-compose-files/merge.md) 与 [profiles](https://github.com/docker/docs/blob/main/content/manuals/compose/how-tos/profiles.md)：按文件顺序合并服务定义，profile 控制启动选择；本模板通过测试定义只存在于测试文件来保证生产配置不包含测试服务。
+
+2026-09-07（v1.18）通过 Context7 官方 API 查询 `/websites/fastapi_tiangolo`，核对 [FastAPI response model](https://fastapi.tiangolo.com/tutorial/response-model/) 与 [BackgroundTasks caveat](https://fastapi.tiangolo.com/tutorial/background-tasks/#caveat)：响应模型承担 OpenAPI schema、序列化、输出过滤和响应校验；跨进程/服务器的重型后台计算应使用独立任务执行设施。官方列举的 Celery 等工具只是示例，不改变本模板 Phase 1 禁止引入通用任务队列的约束。字段白名单、临时密码来源、row_version、错误码、去重授权范围与确认短语均为本模板设计决定，不是框架默认值。
+
+本次仅修订生成契约并进行模板展开、Markdown、编号及接口映射静态检查；未据此宣称已有工程通过 API/安全/恢复测试或 Podman 平台验证。版本支持矩阵必须由每个生成工程填写真实证据；第 18 节最早日期段保留为技术依据记录，不推定其所属修订版本。

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir *)",
+      "Bash(mkdir -p C:/work/dev/scaffold_fastapi/storage/db)",
+      "Bash(touch C:/work/dev/scaffold_fastapi/storage/db/database.sqlite)",
+      "Bash(mkdir -p storage/db)",
+      "Bash(sqlite3 storage/db/database.sqlite \"SELECT 1;\")",
+      "Bash(python -c \"import sqlite3; conn = sqlite3.connect\\('storage/db/database.sqlite'\\); conn.close\\(\\); print\\('OK'\\)\")",
+      "Bash(cd *)",
+      "Bash(python -c \"import sqlite3; conn = sqlite3.connect\\('storage/db/database.sqlite'\\); conn.close\\(\\); print\\('created'\\)\")",
+      "Bash(python *)",
+      "Bash(python3 -c \"import sqlite3, os; p=r'C:\\\\work\\\\dev\\\\scaffold_fastapi\\\\storage\\\\db\\\\database.sqlite'; conn=sqlite3.connect\\(p\\); conn.close\\(\\); print\\('done'\\)\")",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "chrome-devtools",
+    "context7",
+    "next-devtools",
+    "playwright",
+    "everything",
+    "memory",
+    "postgres",
+    "redis"
+  ]
+}
