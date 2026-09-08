@@ -1,0 +1,954 @@
+{
+  "baseline_date": "2026-09-08",
+  "timezone": "Asia/Shanghai",
+  "checked_at": "2026-09-08T02:25:11.202990+00:00",
+  "policy": "Fixed versions as verified now; generation date and installed tools must not change selection. No automatic upgrade.",
+  "verification": "Release metadata and selected documentation checked; no install/build/E2E or image digest verification performed.",
+  "context7": {
+    "transport": "https://mcp.context7.com/mcp",
+    "status": "resolve-library-id and query-docs succeeded",
+    "libraries": [
+      "/websites/tailwindcss",
+      "/microsoft/playwright",
+      "/vitejs/vite"
+    ]
+  },
+  "known_conflicts": [
+    {
+      "package": "openapi-typescript",
+      "version": "7.13.0",
+      "peer": "typescript ^5.x",
+      "selected_typescript": "7.0.2",
+      "status": "Unresolved; do not silently downgrade or bypass peer checks."
+    }
+  ],
+  "components": [
+    {
+      "name": "Python",
+      "ecosystem": "runtime",
+      "version": "3.14.7",
+      "published": "2026-08-05",
+      "source": "https://www.python.org/downloads/"
+    },
+    {
+      "name": "Node.js",
+      "ecosystem": "runtime",
+      "version": "26.8.1",
+      "published": "2026-08-26",
+      "source": "https://nodejs.org/dist/index.json"
+    },
+    {
+      "name": "PostgreSQL",
+      "ecosystem": "service",
+      "version": "18.6",
+      "published": "2026-08-13",
+      "source": "https://www.postgresql.org/support/versioning/"
+    },
+    {
+      "name": "Nginx",
+      "ecosystem": "service",
+      "version": "1.30.4",
+      "channel": "stable",
+      "source": "https://nginx.org/en/download.html"
+    },
+    {
+      "name": "npm",
+      "ecosystem": "npm",
+      "version": "12.0.2",
+      "published": "2026-07-29T21:06:31.421Z",
+      "source": "https://registry.npmjs.org/npm",
+      "engines": {
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+      },
+      "peers": null,
+      "tags": {
+        "latest-1": "1.4.29",
+        "latest-3": "3.10.10",
+        "next-3": "3.10.10",
+        "next-2": "2.15.12",
+        "latest-2": "2.15.12",
+        "latest-4": "4.6.1",
+        "next-4": "4.6.1",
+        "next-5": "5.10.0",
+        "latest-5": "5.10.0",
+        "next-7": "7.24.2",
+        "latest-7": "7.24.2",
+        "latest-6": "6.14.18",
+        "v6.14-next": "6.14.18",
+        "next-6": "6.14.18",
+        "next-8": "8.19.4",
+        "next-9": "9.9.4",
+        "next-10": "10.9.9",
+        "next-12": "12.0.2",
+        "latest": "12.0.2",
+        "next-11": "11.19.1"
+      }
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "version": "19.2.8",
+      "published": "2026-07-21T15:41:28.716Z",
+      "source": "https://registry.npmjs.org/react",
+      "engines": {
+        "node": ">=0.10.0"
+      },
+      "peers": null,
+      "tags": {
+        "beta": "19.0.0-beta-26f2496093-20240514",
+        "rc": "19.0.0-rc.1",
+        "next": "19.3.0-canary-d5736f09-20260507",
+        "latest": "19.2.8",
+        "backport": "19.0.8",
+        "canary": "19.3.0-canary-f1f7ed2a-20260904",
+        "experimental": "0.0.0-experimental-f1f7ed2a-20260904"
+      }
+    },
+    {
+      "name": "react-dom",
+      "ecosystem": "npm",
+      "version": "19.2.8",
+      "published": "2026-07-21T15:41:41.267Z",
+      "source": "https://registry.npmjs.org/react-dom",
+      "engines": null,
+      "peers": {
+        "react": "^19.2.8"
+      },
+      "tags": {
+        "beta": "19.0.0-beta-26f2496093-20240514",
+        "rc": "19.0.0-rc.1",
+        "next": "19.3.0-canary-d5736f09-20260507",
+        "latest": "19.2.8",
+        "backport": "19.0.8",
+        "experimental": "0.0.0-experimental-f1f7ed2a-20260904",
+        "canary": "19.3.0-canary-f1f7ed2a-20260904"
+      }
+    },
+    {
+      "name": "typescript",
+      "ecosystem": "npm",
+      "version": "7.0.2",
+      "published": "2026-07-08T15:55:18.431Z",
+      "source": "https://registry.npmjs.org/typescript",
+      "engines": {
+        "node": ">=16.20.0"
+      },
+      "peers": null,
+      "tags": {
+        "dev": "3.9.4",
+        "tag-for-publishing-older-releases": "4.1.6",
+        "insiders": "4.6.2-insiders.20220225",
+        "beta": "6.0.0-beta",
+        "rc": "7.0.1-rc",
+        "latest": "7.0.2",
+        "next": "7.1.0-dev.20260907.1"
+      }
+    },
+    {
+      "name": "vite",
+      "ecosystem": "npm",
+      "version": "8.2.2",
+      "published": "2026-08-20T04:14:39.107Z",
+      "source": "https://registry.npmjs.org/vite",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "peers": {
+        "tsx": "^4.8.1",
+        "jiti": ">=1.21.0",
+        "less": "^4.0.0",
+        "sass": "^1.70.0",
+        "yaml": "^2.4.2",
+        "stylus": ">=0.54.8",
+        "terser": "^5.16.0",
+        "esbuild": "^0.27.0 || ^0.28.0",
+        "sugarss": "^5.0.0",
+        "@types/node": "^20.19.0 || >=22.12.0",
+        "sass-embedded": "^1.70.0",
+        "@vitejs/devtools": "^0.4.0 || ^0.5.0"
+      },
+      "tags": {
+        "alpha": "6.0.0-alpha.24",
+        "previous": "7.3.6",
+        "latest": "8.2.2",
+        "beta": "8.3.0-beta.1"
+      }
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "ecosystem": "npm",
+      "version": "6.1.1",
+      "published": "2026-08-28T03:30:56.619Z",
+      "source": "https://registry.npmjs.org/@vitejs/plugin-react",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "peers": {
+        "vite": "^8.0.0",
+        "oxc-transform-react": "^0.145.0",
+        "@rolldown/plugin-babel": "^0.1.7 || ^0.2.0",
+        "babel-plugin-react-compiler": "^1.0.0"
+      },
+      "tags": {
+        "alpha": "3.0.0-alpha.2",
+        "beta": "6.0.0-beta.0",
+        "latest": "6.1.1"
+      }
+    },
+    {
+      "name": "react-router",
+      "ecosystem": "npm",
+      "version": "8.3.1",
+      "published": "2026-08-28T14:47:42.622Z",
+      "source": "https://registry.npmjs.org/react-router",
+      "engines": {
+        "node": ">=22.22.0"
+      },
+      "peers": {
+        "react": ">=19.2.7",
+        "react-dom": ">=19.2.7"
+      },
+      "tags": {
+        "previous": "3.2.6",
+        "classic": "5.3.4",
+        "pre-v6": "6.30.3-pre-v6.0",
+        "nightly": "0.0.0-nightly-4547c8015-20260410",
+        "pre": "8.0.0-pre.1",
+        "version-6": "6.30.6",
+        "experimental": "0.0.0-experimental-7aea711dd",
+        "version-7": "7.18.3",
+        "latest": "8.3.1"
+      }
+    },
+    {
+      "name": "@tanstack/react-query",
+      "ecosystem": "npm",
+      "version": "5.102.8",
+      "published": "2026-08-27T16:06:57.089Z",
+      "source": "https://registry.npmjs.org/@tanstack/react-query",
+      "engines": null,
+      "peers": {
+        "react": "^18 || ^19"
+      },
+      "tags": {
+        "alpha": "5.0.0-alpha.91",
+        "beta": "5.0.0-beta.35",
+        "rc": "5.0.0-rc.16",
+        "previous": "4.44.0",
+        "latest": "5.102.8"
+      }
+    },
+    {
+      "name": "tailwindcss",
+      "ecosystem": "npm",
+      "version": "4.3.3",
+      "published": "2026-07-16T12:03:35.267Z",
+      "source": "https://registry.npmjs.org/tailwindcss",
+      "engines": null,
+      "peers": null,
+      "tags": {
+        "next": "4.0.0",
+        "v3-lts": "3.4.19",
+        "latest": "4.3.3",
+        "insiders": "0.0.0-insiders.f723e83"
+      }
+    },
+    {
+      "name": "@tailwindcss/vite",
+      "ecosystem": "npm",
+      "version": "4.3.3",
+      "published": "2026-07-16T12:04:06.316Z",
+      "source": "https://registry.npmjs.org/@tailwindcss/vite",
+      "engines": null,
+      "peers": {
+        "vite": "^5.2.0 || ^6 || ^7 || ^8"
+      },
+      "tags": {
+        "internal": "0.0.0-internal.b2586d4e",
+        "next": "4.0.0",
+        "latest": "4.3.3",
+        "insiders": "0.0.0-insiders.f723e83"
+      }
+    },
+    {
+      "name": "react-hook-form",
+      "ecosystem": "npm",
+      "version": "7.87.0",
+      "published": "2026-08-30T02:36:19.125Z",
+      "source": "https://registry.npmjs.org/react-hook-form",
+      "engines": {
+        "node": ">=18.0.0"
+      },
+      "peers": {
+        "react": "^16.8.0 || ^17 || ^18 || ^19"
+      },
+      "tags": {
+        "next": "7.60.0-next.0",
+        "alpha": "8.0.0-alpha.5",
+        "beta": "8.0.0-beta.3",
+        "latest": "7.87.0"
+      }
+    },
+    {
+      "name": "zod",
+      "ecosystem": "npm",
+      "version": "4.5.4",
+      "published": "2026-08-29T17:55:42.775Z",
+      "source": "https://registry.npmjs.org/zod",
+      "engines": null,
+      "peers": null,
+      "tags": {
+        "next": "3.25.0-beta.20250519T094321",
+        "alpha": "3.25.68-alpha.11",
+        "beta": "4.1.13-beta.0",
+        "canary": "4.5.0-canary.20260828T171753",
+        "latest": "4.5.4"
+      }
+    },
+    {
+      "name": "radix-ui",
+      "ecosystem": "npm",
+      "version": "1.6.7",
+      "published": "2026-07-24T23:51:30.916Z",
+      "source": "https://registry.npmjs.org/radix-ui",
+      "engines": null,
+      "peers": {
+        "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
+        "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
+        "@types/react": "*",
+        "@types/react-dom": "*"
+      },
+      "tags": {
+        "latest": "1.6.7",
+        "next": "1.7.0-rc.1785512840124"
+      }
+    },
+    {
+      "name": "lucide-react",
+      "ecosystem": "npm",
+      "version": "1.42.0",
+      "published": "2026-09-07T10:19:28.809Z",
+      "source": "https://registry.npmjs.org/lucide-react",
+      "engines": null,
+      "peers": {
+        "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+      },
+      "tags": {
+        "beta": "0.266.0-beta.0",
+        "dev": "0.554.0-rc.0",
+        "next": "1.3.0",
+        "latest": "1.42.0"
+      }
+    },
+    {
+      "name": "vitest",
+      "ecosystem": "npm",
+      "version": "5.0.0",
+      "published": "2026-09-03T12:24:30.312Z",
+      "source": "https://registry.npmjs.org/vitest",
+      "engines": {
+        "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+      },
+      "peers": {
+        "vite": "^6.4.0 || ^7.0.0 || ^8.0.0",
+        "jsdom": "*",
+        "happy-dom": "*",
+        "@vitest/ui": "5.0.0",
+        "@types/node": "^22.0.0 || >=24.0.0",
+        "@edge-runtime/vm": "*",
+        "@opentelemetry/api": "^1.9.0",
+        "@vitest/coverage-v8": "5.0.0",
+        "@vitest/browser-preview": "5.0.0",
+        "@vitest/coverage-istanbul": "5.0.0",
+        "@vitest/browser-playwright": "5.0.0",
+        "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0"
+      },
+      "tags": {
+        "V3": "3.2.7",
+        "beta": "5.0.0-beta.7",
+        "rc": "5.0.0-rc.4",
+        "latest": "5.0.0",
+        "V4": "4.1.11"
+      }
+    },
+    {
+      "name": "@testing-library/react",
+      "ecosystem": "npm",
+      "version": "16.3.3",
+      "published": "2026-08-27T17:41:18.735Z",
+      "source": "https://registry.npmjs.org/@testing-library/react",
+      "engines": {
+        "node": ">=18"
+      },
+      "peers": {
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0",
+        "@types/react": "^18.0.0 || ^19.0.0",
+        "@types/react-dom": "^18.0.0 || ^19.0.0",
+        "@testing-library/dom": "^10.0.0"
+      },
+      "tags": {
+        "beta": "11.0.0-beta.1",
+        "release-12.x": "12.1.5",
+        "alpha": "14.0.0-alpha.3",
+        "release-14.x": "14.3.1",
+        "latest": "16.3.3"
+      }
+    },
+    {
+      "name": "@testing-library/dom",
+      "ecosystem": "npm",
+      "version": "10.4.1",
+      "published": "2025-07-27T13:23:37.151Z",
+      "source": "https://registry.npmjs.org/@testing-library/dom",
+      "engines": {
+        "node": ">=18"
+      },
+      "peers": null,
+      "tags": {
+        "next": "6.16.0",
+        "beta": "7.0.0-beta.4",
+        "release-8.x": "8.20.1",
+        "alpha": "10.0.0-alpha.3",
+        "latest": "10.4.1"
+      }
+    },
+    {
+      "name": "@testing-library/user-event",
+      "ecosystem": "npm",
+      "version": "14.6.7",
+      "published": "2026-09-02T01:56:32.109Z",
+      "source": "https://registry.npmjs.org/@testing-library/user-event",
+      "engines": {
+        "npm": ">=6",
+        "node": ">=12"
+      },
+      "peers": {
+        "@testing-library/dom": ">=7.21.4"
+      },
+      "tags": {
+        "alpha": "14.0.0-alpha.18",
+        "beta": "14.0.0-beta.14",
+        "latest": "14.6.7"
+      }
+    },
+    {
+      "name": "msw",
+      "ecosystem": "npm",
+      "version": "2.15.0",
+      "published": "2026-07-08T01:43:07.502Z",
+      "source": "https://registry.npmjs.org/msw",
+      "engines": {
+        "node": ">=18"
+      },
+      "peers": {
+        "typescript": ">= 4.8.x"
+      },
+      "tags": {
+        "beta": "0.0.0-fetch.rc-4",
+        "next": "2.3.0-ws.rc-12",
+        "backport": "1.3.5",
+        "latest": "2.15.0"
+      }
+    },
+    {
+      "name": "@playwright/test",
+      "ecosystem": "npm",
+      "version": "1.63.0",
+      "published": "2026-09-04T22:44:00.304Z",
+      "source": "https://registry.npmjs.org/@playwright/test",
+      "engines": {
+        "node": ">=20"
+      },
+      "peers": null,
+      "tags": {
+        "rc": "1.18.0-rc1",
+        "beta": "1.63.0-beta-1788559919000",
+        "latest": "1.63.0",
+        "next": "1.64.0-alpha-2026-09-07"
+      }
+    },
+    {
+      "name": "openapi-typescript",
+      "ecosystem": "npm",
+      "version": "7.13.0",
+      "published": "2026-02-11T16:02:25.378Z",
+      "source": "https://registry.npmjs.org/openapi-typescript",
+      "engines": null,
+      "peers": {
+        "typescript": "^5.x"
+      },
+      "tags": {
+        "swagger-v2": "5.4.2",
+        "next": "7.0.0-rc.1",
+        "latest": "7.13.0"
+      }
+    },
+    {
+      "name": "openapi-fetch",
+      "ecosystem": "npm",
+      "version": "0.17.0",
+      "published": "2026-02-11T16:02:21.454Z",
+      "source": "https://registry.npmjs.org/openapi-fetch",
+      "engines": null,
+      "peers": null,
+      "tags": {
+        "latest": "0.17.0"
+      }
+    },
+    {
+      "name": "uv",
+      "ecosystem": "pypi",
+      "version": "0.12.10",
+      "published": "2026-09-04T23:13:31.502670Z",
+      "source": "https://pypi.org/pypi/uv/json",
+      "requires_python": ">=3.8",
+      "requires_dist": null,
+      "yanked": false
+    },
+    {
+      "name": "fastapi",
+      "ecosystem": "pypi",
+      "version": "0.141.1",
+      "published": "2026-07-29T17:18:04.364385Z",
+      "source": "https://pypi.org/pypi/fastapi/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "starlette>=0.46.0",
+        "pydantic>=2.9.0",
+        "typing-extensions>=4.8.0",
+        "typing-inspection>=0.4.2",
+        "annotated-doc>=0.0.2",
+        "fastapi-cli[standard]>=0.0.32; extra == \"standard\"",
+        "fastar>=0.9.0; extra == \"standard\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"standard\"",
+        "jinja2>=3.1.5; extra == \"standard\"",
+        "python-multipart>=0.0.18; extra == \"standard\"",
+        "email-validator>=2.0.0; extra == \"standard\"",
+        "uvicorn[standard]>=0.12.0; extra == \"standard\"",
+        "pydantic-settings>=2.0.0; extra == \"standard\"",
+        "pydantic-extra-types>=2.0.0; extra == \"standard\"",
+        "fastapi-cli[standard-no-fastapi-cloud-cli]>=0.0.32; extra == \"standard-no-fastapi-cloud-cli\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "jinja2>=3.1.5; extra == \"standard-no-fastapi-cloud-cli\"",
+        "python-multipart>=0.0.18; extra == \"standard-no-fastapi-cloud-cli\"",
+        "email-validator>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "uvicorn[standard]>=0.12.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "pydantic-settings>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "pydantic-extra-types>=2.0.0; extra == \"standard-no-fastapi-cloud-cli\"",
+        "fastapi-cli[standard]>=0.0.32; extra == \"all\"",
+        "httpx<1.0.0,>=0.23.0; extra == \"all\"",
+        "jinja2>=3.1.5; extra == \"all\"",
+        "python-multipart>=0.0.18; extra == \"all\"",
+        "itsdangerous>=1.1.0; extra == \"all\"",
+        "pyyaml>=5.3.1; extra == \"all\"",
+        "email-validator>=2.0.0; extra == \"all\"",
+        "uvicorn[standard]>=0.12.0; extra == \"all\"",
+        "pydantic-settings>=2.0.0; extra == \"all\"",
+        "pydantic-extra-types>=2.0.0; extra == \"all\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "pydantic",
+      "ecosystem": "pypi",
+      "version": "2.13.5",
+      "published": "2026-08-28T14:03:59.136157Z",
+      "source": "https://pypi.org/pypi/pydantic/json",
+      "requires_python": ">=3.9",
+      "requires_dist": [
+        "annotated-types>=0.6.0",
+        "pydantic-core==2.46.5",
+        "typing-extensions>=4.14.1",
+        "typing-inspection>=0.4.2",
+        "email-validator>=2.0.0; extra == \"email\"",
+        "tzdata; (python_version >= \"3.9\" and platform_system == \"Windows\") and extra == \"timezone\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "sqlalchemy",
+      "ecosystem": "pypi",
+      "version": "2.0.52",
+      "published": "2026-08-11T19:07:09.829565Z",
+      "source": "https://pypi.org/pypi/sqlalchemy/json",
+      "requires_python": ">=3.7",
+      "requires_dist": [
+        "importlib-metadata; python_version < \"3.8\"",
+        "greenlet>=1; platform_machine == \"aarch64\" or (platform_machine == \"ppc64le\" or (platform_machine == \"x86_64\" or (platform_machine == \"amd64\" or (platform_machine == \"AMD64\" or (platform_machine == \"win32\" or platform_machine == \"WIN32\")))))",
+        "typing-extensions>=4.6.0",
+        "greenlet>=1; extra == \"asyncio\"",
+        "mypy>=0.910; extra == \"mypy\"",
+        "pyodbc; extra == \"mssql\"",
+        "pymssql; extra == \"mssql-pymssql\"",
+        "pyodbc; extra == \"mssql-pyodbc\"",
+        "mysqlclient>=1.4.0; extra == \"mysql\"",
+        "mysql-connector-python; extra == \"mysql-connector\"",
+        "mariadb!=1.1.10,!=1.1.2,!=1.1.5,>=1.0.1; extra == \"mariadb-connector\"",
+        "cx_oracle>=8; extra == \"oracle\"",
+        "oracledb>=1.0.1; extra == \"oracle-oracledb\"",
+        "psycopg2>=2.7; extra == \"postgresql\"",
+        "pg8000>=1.29.1; extra == \"postgresql-pg8000\"",
+        "greenlet>=1; extra == \"postgresql-asyncpg\"",
+        "asyncpg; extra == \"postgresql-asyncpg\"",
+        "psycopg2-binary; extra == \"postgresql-psycopg2binary\"",
+        "psycopg2cffi; extra == \"postgresql-psycopg2cffi\"",
+        "psycopg>=3.0.7; extra == \"postgresql-psycopg\"",
+        "psycopg[binary]>=3.0.7; extra == \"postgresql-psycopgbinary\"",
+        "pymysql; extra == \"pymysql\"",
+        "greenlet>=1; extra == \"aiomysql\"",
+        "aiomysql>=0.2.0; extra == \"aiomysql\"",
+        "greenlet>=1; extra == \"aioodbc\"",
+        "aioodbc; extra == \"aioodbc\"",
+        "greenlet>=1; extra == \"asyncmy\"",
+        "asyncmy>=0.2.12; extra == \"asyncmy\"",
+        "greenlet>=1; extra == \"aiosqlite\"",
+        "aiosqlite; extra == \"aiosqlite\"",
+        "typing_extensions!=3.10.0.1; extra == \"aiosqlite\"",
+        "sqlcipher3_binary; extra == \"sqlcipher\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "alembic",
+      "ecosystem": "pypi",
+      "version": "1.19.2",
+      "published": "2026-09-04T17:10:11.212585Z",
+      "source": "https://pypi.org/pypi/alembic/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "SQLAlchemy>=1.4.23",
+        "Mako",
+        "typing-extensions>=4.12",
+        "tomli; python_version < \"3.11\"",
+        "tzdata; extra == \"tz\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "asyncpg",
+      "ecosystem": "pypi",
+      "version": "0.31.0",
+      "published": "2025-11-24T23:25:23.527329Z",
+      "source": "https://pypi.org/pypi/asyncpg/json",
+      "requires_python": ">=3.9.0",
+      "requires_dist": [
+        "async_timeout>=4.0.3; python_version < \"3.11.0\"",
+        "gssapi; platform_system != \"Windows\" and extra == \"gssauth\"",
+        "sspilib; platform_system == \"Windows\" and extra == \"gssauth\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "redis",
+      "ecosystem": "pypi",
+      "version": "8.1.0",
+      "published": "2026-07-30T08:50:58.497552Z",
+      "source": "https://pypi.org/pypi/redis/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "async-timeout>=4.0.3; python_full_version < \"3.11.3\"",
+        "pybreaker>=1.4.0; extra == \"circuit-breaker\"",
+        "hiredis>=3.2.0; extra == \"hiredis\"",
+        "pyjwt>=2.13.0; extra == \"jwt\"",
+        "cryptography>=36.0.1; extra == \"ocsp\"",
+        "pyopenssl>=20.0.1; extra == \"ocsp\"",
+        "requests>=2.31.0; extra == \"ocsp\"",
+        "opentelemetry-api>=1.39.1; extra == \"otel\"",
+        "opentelemetry-exporter-otlp-proto-http>=1.39.1; extra == \"otel\"",
+        "opentelemetry-sdk>=1.39.1; extra == \"otel\"",
+        "xxhash~=3.6.0; extra == \"xxhash\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "httpx",
+      "ecosystem": "pypi",
+      "version": "0.28.1",
+      "published": "2024-12-06T15:37:21.509172Z",
+      "source": "https://pypi.org/pypi/httpx/json",
+      "requires_python": ">=3.8",
+      "requires_dist": [
+        "anyio",
+        "certifi",
+        "httpcore==1.*",
+        "idna",
+        "brotli; platform_python_implementation == \"CPython\" and extra == \"brotli\"",
+        "brotlicffi; platform_python_implementation != \"CPython\" and extra == \"brotli\"",
+        "click==8.*; extra == \"cli\"",
+        "pygments==2.*; extra == \"cli\"",
+        "rich<14,>=10; extra == \"cli\"",
+        "h2<5,>=3; extra == \"http2\"",
+        "socksio==1.*; extra == \"socks\"",
+        "zstandard>=0.18.0; extra == \"zstd\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "PyJWT",
+      "ecosystem": "pypi",
+      "version": "2.13.0",
+      "published": "2026-05-21T19:54:35.362086Z",
+      "source": "https://pypi.org/pypi/PyJWT/json",
+      "requires_python": ">=3.9",
+      "requires_dist": [
+        "typing_extensions>=4.0; python_version < \"3.11\"",
+        "cryptography>=3.4.0; extra == \"crypto\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "pwdlib",
+      "ecosystem": "pypi",
+      "version": "0.3.1",
+      "published": "2026-08-12T08:38:37.483012Z",
+      "source": "https://pypi.org/pypi/pwdlib/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "typing-extensions>=4.16.0; python_version < \"3.11\"",
+        "argon2-cffi>=23.1.0; extra == \"argon2\"",
+        "bcrypt>=4.1.2; extra == \"bcrypt\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "argon2-cffi",
+      "ecosystem": "pypi",
+      "version": "25.1.0",
+      "published": "2025-06-03T06:55:30.804163Z",
+      "source": "https://pypi.org/pypi/argon2-cffi/json",
+      "requires_python": ">=3.8",
+      "requires_dist": [
+        "argon2-cffi-bindings"
+      ],
+      "yanked": false
+    },
+    {
+      "name": "email-validator",
+      "ecosystem": "pypi",
+      "version": "2.3.0",
+      "published": "2025-08-26T13:09:05.858779Z",
+      "source": "https://pypi.org/pypi/email-validator/json",
+      "requires_python": ">=3.8",
+      "requires_dist": [
+        "dnspython>=2.0.0",
+        "idna>=2.0.0"
+      ],
+      "yanked": false
+    },
+    {
+      "name": "cryptography",
+      "ecosystem": "pypi",
+      "version": "50.0.1",
+      "published": "2026-08-25T19:44:03.155112Z",
+      "source": "https://pypi.org/pypi/cryptography/json",
+      "requires_python": "!=3.9.0,!=3.9.1,>=3.9",
+      "requires_dist": [
+        "cffi>=2.0.0; platform_python_implementation != \"PyPy\"",
+        "typing-extensions>=4.13.2; python_full_version < \"3.11\"",
+        "bcrypt>=3.1.5; extra == \"ssh\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "pytest",
+      "ecosystem": "pypi",
+      "version": "9.1.1",
+      "published": "2026-06-19T10:58:31.347074Z",
+      "source": "https://pypi.org/pypi/pytest/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "colorama>=0.4; sys_platform == \"win32\"",
+        "exceptiongroup>=1; python_version < \"3.11\"",
+        "iniconfig>=1.0.1",
+        "packaging>=22",
+        "pluggy<2,>=1.5",
+        "pygments>=2.7.2",
+        "tomli>=1; python_version < \"3.11\"",
+        "argcomplete; extra == \"dev\"",
+        "attrs>=19.2; extra == \"dev\"",
+        "hypothesis>=3.56; extra == \"dev\"",
+        "mock; extra == \"dev\"",
+        "requests; extra == \"dev\"",
+        "setuptools; extra == \"dev\"",
+        "xmlschema; extra == \"dev\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "anyio",
+      "ecosystem": "pypi",
+      "version": "4.15.1",
+      "published": "2026-09-05T10:42:37.923487Z",
+      "source": "https://pypi.org/pypi/anyio/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "exceptiongroup>=1.0.2; python_version < \"3.11\"",
+        "idna>=2.8",
+        "typing_extensions>=4.16.0; python_version < \"3.15\"",
+        "trio>=0.32.0; extra == \"trio\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "uvicorn",
+      "ecosystem": "pypi",
+      "version": "0.52.4",
+      "published": "2026-08-19T06:27:40.360546Z",
+      "source": "https://pypi.org/pypi/uvicorn/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "click>=7.0",
+        "h11>=0.8",
+        "typing-extensions>=4.0; python_version < \"3.11\"",
+        "httptools>=0.8.0; extra == \"standard\"",
+        "python-dotenv>=0.13; extra == \"standard\"",
+        "pyyaml>=5.1; extra == \"standard\"",
+        "uvloop>=0.15.1; (sys_platform != \"win32\" and (sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\")) and extra == \"standard\"",
+        "watchfiles>=0.20; extra == \"standard\"",
+        "websockets>=13.0; extra == \"standard\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "ruff",
+      "ecosystem": "pypi",
+      "version": "0.16.6",
+      "published": "2026-09-03T16:56:40.986922Z",
+      "source": "https://pypi.org/pypi/ruff/json",
+      "requires_python": ">=3.7",
+      "requires_dist": null,
+      "yanked": false
+    },
+    {
+      "name": "mypy",
+      "ecosystem": "pypi",
+      "version": "2.3.1",
+      "published": "2026-08-15T03:01:23.577672Z",
+      "source": "https://pypi.org/pypi/mypy/json",
+      "requires_python": ">=3.10",
+      "requires_dist": [
+        "typing_extensions>=4.6.0; python_version < \"3.15\"",
+        "typing_extensions>=4.14.0; python_version >= \"3.15\"",
+        "mypy_extensions>=1.0.0",
+        "pathspec>=1.0.0",
+        "tomli>=1.1.0; python_version < \"3.11\"",
+        "librt>=0.13.0; platform_python_implementation != \"PyPy\"",
+        "ast-serialize<1.0.0,>=0.6.0",
+        "psutil>=4.0; extra == \"dmypy\"",
+        "setuptools>=50; extra == \"mypyc\"",
+        "lxml; extra == \"reports\"",
+        "pip; extra == \"install-types\"",
+        "orjson; extra == \"faster-cache\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "podman-compose",
+      "ecosystem": "pypi",
+      "version": "1.6.0",
+      "published": "2026-06-03T21:35:46.781053Z",
+      "source": "https://pypi.org/pypi/podman-compose/json",
+      "requires_python": ">=3.9",
+      "requires_dist": [
+        "python-dotenv",
+        "pyyaml",
+        "coverage; extra == \"devel\"",
+        "parameterized; extra == \"devel\"",
+        "pre-commit; extra == \"devel\"",
+        "ruff; extra == \"devel\""
+      ],
+      "yanked": false
+    },
+    {
+      "name": "Podman",
+      "ecosystem": "github",
+      "version": "v6.1.1",
+      "published": "2026-09-02T16:35:51Z",
+      "source": "https://github.com/podman-container-tools/podman/releases/tag/v6.1.1",
+      "prerelease": false
+    },
+    {
+      "name": "Redis Open Source",
+      "ecosystem": "github",
+      "version": "8.10.1",
+      "published": "2026-08-17T16:44:04Z",
+      "source": "https://github.com/redis/redis/releases/tag/8.10.1",
+      "prerelease": false
+    },
+    {
+      "name": "RedisInsight",
+      "ecosystem": "github",
+      "version": "3.8.0",
+      "published": "2026-07-21T07:51:57Z",
+      "source": "https://github.com/redis/RedisInsight/releases/tag/3.8.0",
+      "prerelease": false
+    },
+    {
+      "name": "Mailpit",
+      "ecosystem": "github",
+      "version": "v1.31.1",
+      "published": "2026-09-05T11:12:37Z",
+      "source": "https://github.com/axllent/mailpit/releases/tag/v1.31.1",
+      "prerelease": false
+    },
+    {
+      "name": "mkcert",
+      "ecosystem": "github",
+      "version": "v1.4.4",
+      "published": "2022-04-26T17:51:05Z",
+      "source": "https://github.com/FiloSottile/mkcert/releases/tag/v1.4.4",
+      "prerelease": false
+    },
+    {
+      "name": "OpenTelemetry Collector Contrib",
+      "ecosystem": "github",
+      "version": "v0.160.0",
+      "published": "2026-09-02T22:47:58Z",
+      "source": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/tag/v0.160.0",
+      "prerelease": false
+    },
+    {
+      "name": "@types/node",
+      "ecosystem": "npm",
+      "version": "26.5.0",
+      "published": "2026-09-07T14:07:47.948Z",
+      "source": "https://registry.npmjs.org/@types/node",
+      "engines": null,
+      "peers": {}
+    },
+    {
+      "name": "@types/react",
+      "ecosystem": "npm",
+      "version": "19.2.18",
+      "published": "2026-07-30T21:54:03.456Z",
+      "source": "https://registry.npmjs.org/@types/react",
+      "engines": null,
+      "peers": {}
+    },
+    {
+      "name": "@types/react-dom",
+      "ecosystem": "npm",
+      "version": "19.2.7",
+      "published": "2026-09-03T11:04:47.516Z",
+      "source": "https://registry.npmjs.org/@types/react-dom",
+      "engines": null,
+      "peers": {
+        "@types/react": "^19.2.0"
+      }
+    },
+    {
+      "name": "jsdom",
+      "ecosystem": "npm",
+      "version": "30.0.1",
+      "published": "2026-07-29T04:18:42.378Z",
+      "source": "https://registry.npmjs.org/jsdom",
+      "engines": {
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+      },
+      "peers": {
+        "canvas": "^3.2.3"
+      }
+    }
+  ]
+}
