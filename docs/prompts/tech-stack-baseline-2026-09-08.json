@@ -2,8 +2,8 @@
   "baseline_date": "2026-09-08",
   "timezone": "Asia/Shanghai",
   "checked_at": "2026-09-08T02:25:11.202990+00:00",
-  "policy": "Fixed versions as verified now; generation date and installed tools must not change selection. No automatic upgrade.",
-  "verification": "Release metadata and selected documentation checked; no install/build/E2E or image digest verification performed.",
+  "policy": "Create a new project from scratch. Select the newest mutually compatible stable combination as of 2026-09-08; compatibility takes priority over each component latest. Installed tools and generation date do not determine versions.",
+  "verification": "Final isolated compatibility fixture checks passed; typecheck failures in excluded Vitest 5.0.0 are preserved. Python checks are dependency resolution only. Full application/service/platform/E2E verification remains required.",
   "context7": {
     "transport": "https://mcp.context7.com/mcp",
     "status": "resolve-library-id and query-docs succeeded",
@@ -13,15 +13,7 @@
       "/vitejs/vite"
     ]
   },
-  "known_conflicts": [
-    {
-      "package": "openapi-typescript",
-      "version": "7.13.0",
-      "peer": "typescript ^5.x",
-      "selected_typescript": "7.0.2",
-      "status": "Unresolved; do not silently downgrade or bypass peer checks."
-    }
-  ],
+  "known_conflicts": [],
   "components": [
     {
       "name": "Python",
@@ -127,22 +119,15 @@
     {
       "name": "typescript",
       "ecosystem": "npm",
-      "version": "7.0.2",
-      "published": "2026-07-08T15:55:18.431Z",
-      "source": "https://registry.npmjs.org/typescript",
+      "version": "5.9.3",
+      "published": "2025-09-30T21:19:38.784Z",
+      "source": "https://registry.npmjs.org/typescript/5.9.3",
       "engines": {
-        "node": ">=16.20.0"
+        "node": ">=14.17"
       },
       "peers": null,
-      "tags": {
-        "dev": "3.9.4",
-        "tag-for-publishing-older-releases": "4.1.6",
-        "insiders": "4.6.2-insiders.20220225",
-        "beta": "6.0.0-beta",
-        "rc": "7.0.1-rc",
-        "latest": "7.0.2",
-        "next": "7.1.0-dev.20260907.1"
-      }
+      "latest_stable_candidate": "7.0.2",
+      "selection_reason": "Highest stable version satisfying openapi-typescript 7.13.0 peer typescript ^5.x; application and generator share one compiler and root lockfile."
     },
     {
       "name": "vite",
@@ -343,33 +328,28 @@
     {
       "name": "vitest",
       "ecosystem": "npm",
-      "version": "5.0.0",
-      "published": "2026-09-03T12:24:30.312Z",
-      "source": "https://registry.npmjs.org/vitest",
+      "version": "4.1.11",
+      "published": "2026-08-18T14:27:07.240Z",
+      "source": "https://registry.npmjs.org/vitest/4.1.11",
       "engines": {
-        "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+        "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
       },
       "peers": {
-        "vite": "^6.4.0 || ^7.0.0 || ^8.0.0",
+        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0",
         "jsdom": "*",
         "happy-dom": "*",
-        "@vitest/ui": "5.0.0",
-        "@types/node": "^22.0.0 || >=24.0.0",
+        "@vitest/ui": "4.1.11",
+        "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
         "@edge-runtime/vm": "*",
         "@opentelemetry/api": "^1.9.0",
-        "@vitest/coverage-v8": "5.0.0",
-        "@vitest/browser-preview": "5.0.0",
-        "@vitest/coverage-istanbul": "5.0.0",
-        "@vitest/browser-playwright": "5.0.0",
-        "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0"
+        "@vitest/coverage-v8": "4.1.11",
+        "@vitest/browser-preview": "4.1.11",
+        "@vitest/coverage-istanbul": "4.1.11",
+        "@vitest/browser-playwright": "4.1.11",
+        "@vitest/browser-webdriverio": "4.1.11"
       },
-      "tags": {
-        "V3": "3.2.7",
-        "beta": "5.0.0-beta.7",
-        "rc": "5.0.0-rc.4",
-        "latest": "5.0.0",
-        "V4": "4.1.11"
-      }
+      "latest_stable_candidate": "5.0.0",
+      "selection_reason": "5.0.0 failed full TypeScript library/config typecheck with missing @vitest/expect and MarkOptions export. 4.1.11 is the next-highest stable version and passed strict install/typecheck/build/component tests with Node 26.8.1/Vite 8.2.2/TypeScript 5.9.3."
     },
     {
       "name": "@testing-library/react",
@@ -949,6 +929,256 @@
       "peers": {
         "canvas": "^3.2.3"
       }
+    }
+  ],
+  "scope": "Greenfield project creation only; no existing-project upgrade or legacy-data migration prerequisites.",
+  "resolved_conflicts": [
+    {
+      "package": "openapi-typescript",
+      "version": "7.13.0",
+      "constraint": "typescript ^5.x",
+      "excluded_typescript": "7.0.2 (also excludes 6.x)",
+      "selected_typescript": "5.9.3",
+      "resolution": "Single compatible compiler under the user compatibility-first selection rule; no separate tool workspace/lockfile."
+    },
+    {
+      "package": "vitest",
+      "excluded_version": "5.0.0",
+      "selected_version": "4.1.11",
+      "reason": "Full typecheck failed for 5.0.0; identical fixture passed with 4.1.11. No skipLibCheck, force, peer overrides or type shims."
+    }
+  ],
+  "compatibility_validation": {
+    "date": "2026-09-08",
+    "document_version": "v1.23",
+    "context7": {
+      "library": "/openapi-ts/openapi-typescript",
+      "status": "resolve-library-id and query-docs succeeded"
+    },
+    "environment": "Isolated Windows x64 fixture with official portable Node.js 26.8.1, npm 12.0.2 and uv 0.12.10; existing system installations not used for selection.",
+    "checks": [
+      {
+        "name": "python-resolve-x86_64-pc-windows-msvc",
+        "exit_code": 0,
+        "command": [
+          "<fixture>\\tools\\uv\\uv-0.12.10.data\\scripts\\uv.exe",
+          "pip",
+          "compile",
+          "<fixture>\\requirements.in",
+          "--python-version",
+          "3.14",
+          "--python-platform",
+          "x86_64-pc-windows-msvc",
+          "--no-config",
+          "--output-file",
+          "<fixture>\\requirements-x86_64-pc-windows-msvc.txt"
+        ]
+      },
+      {
+        "name": "python-resolve-x86_64-unknown-linux-gnu",
+        "exit_code": 0,
+        "command": [
+          "<fixture>\\tools\\uv\\uv-0.12.10.data\\scripts\\uv.exe",
+          "pip",
+          "compile",
+          "<fixture>\\requirements.in",
+          "--python-version",
+          "3.14",
+          "--python-platform",
+          "x86_64-unknown-linux-gnu",
+          "--no-config",
+          "--output-file",
+          "<fixture>\\requirements-x86_64-unknown-linux-gnu.txt"
+        ]
+      },
+      {
+        "name": "npm-install",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "install",
+          "--ignore-scripts",
+          "--strict-peer-deps",
+          "--no-audit",
+          "--no-fund"
+        ]
+      },
+      {
+        "name": "npm-ls",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "ls",
+          "--all",
+          "--json"
+        ]
+      },
+      {
+        "name": "npm-generate",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "generate"
+        ]
+      },
+      {
+        "name": "npm-typecheck",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "typecheck"
+        ]
+      },
+      {
+        "name": "npm-build",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "build"
+        ]
+      },
+      {
+        "name": "npm-test",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "test"
+        ]
+      },
+      {
+        "name": "npm-ci",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "ci",
+          "--ignore-scripts",
+          "--strict-peer-deps",
+          "--no-audit",
+          "--no-fund"
+        ]
+      },
+      {
+        "name": "npm-generate-repeat",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "generate"
+        ]
+      },
+      {
+        "name": "npm-typecheck-repeat",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "typecheck"
+        ]
+      },
+      {
+        "name": "npm-test-repeat",
+        "exit_code": 0,
+        "command": [
+          "node@26.8.1",
+          "npm@12.0.2",
+          "run",
+          "test"
+        ]
+      },
+      {
+        "name": "generated-types-identical",
+        "exit_code": 0
+      }
+    ],
+    "not_verified": [
+      "full application",
+      "live PostgreSQL/Redis/services",
+      "Podman/Compose/Quadlet",
+      "browser E2E and physical devices",
+      "image digests",
+      "Python runtime integration"
+    ],
+    "fixture_hashes": {
+      "compat.test.tsx": "e6a725742155343532b7d05b7ca6005a51446b77712c3e8ccf339bdee9f6f08d",
+      "index.html": "902189b7f0a4f7ff4f5053841cd2b4a340374cadee1184cd205237c4b722b072",
+      "main.tsx": "210b09400bbd9c8020d4354ff49ad0cadd12402482258976facc29b90117e6e1",
+      "openapi.json": "f2cd048fe536da4cf4fe165b8d0198694f4a0bcca30649e09f7420b64ec2ded9",
+      "package-lock.json": "480303abe06f3c7578ed49af93a67c4e20efb53e58d565cda2664d8d829834cf",
+      "package.json": "506c35dd6b44d0a5c63d504dcf72622f8de80175afb9dad267e9c7df5b3307e5",
+      "schema.d.ts": "01a45eef2bdd85d90c40c8249c2f7b925561366d9789959730c94df24ac2c7dc",
+      "style.css": "944e6e12c0067a6767836a78ad6c4095b829f966b44f33bc95cfef1401ab3c10",
+      "tsconfig.json": "aaa1de7b45350b0f98cbdd4e68970adf178ceef0616967a782c503dd3300114d",
+      "vite.config.ts": "3def35a50bc023b41a12062747a35620b5519a503c39e8e1f3c0ff16f0e22b8a",
+      "vitest.config.ts": "54e9575977ab4722a5719d09f77c3594eb06b28b754ce3d2611d66852632f802"
+    },
+    "final_fixture_checks_passed": true,
+    "fixture_artifacts": ".local/compat-2026-09-08 (local validation artifacts, not a new application and not required to use the standalone template)",
+    "fixture_scope": "All 25 frontend npm dependencies from the 55-component baseline, excluding npm itself which runs separately; 19 Python dependencies resolved for Python 3.14 on Windows x64 and Linux x64. One temporary package, not the generated multi-workspace application.",
+    "rejected_candidates": [
+      {
+        "name": "typescript",
+        "version": "7.0.2",
+        "reason": "Does not satisfy openapi-typescript@7.13.0 peer ^5.x (also excludes 6.x)."
+      },
+      {
+        "name": "vitest",
+        "version": "5.0.0",
+        "failed_check": "npm-typecheck",
+        "exit_code": 2,
+        "diagnostics": [
+          "TS2307: Cannot find module '@vitest/expect'",
+          "TS2305: Module 'vitest/browser' has no exported member 'MarkOptions'"
+        ]
+      }
+    ],
+    "configuration": {
+      "strict": true,
+      "skipLibCheck": false,
+      "npm_strict_peer_deps": true,
+      "npm_force": false,
+      "npm_legacy_peer_deps": false,
+      "install_scripts": "disabled",
+      "additional_type_shims": false
+    },
+    "tool_versions": {
+      "node": "v26.8.1",
+      "npm": "12.0.2",
+      "uv": "uv 0.12.10 (3c979abda 2026-09-04 x86_64-pc-windows-msvc)"
+    },
+    "completed_at": "2026-09-08T04:52:15.657938+00:00"
+  },
+  "audit_history": [
+    {
+      "date": "2026-09-08",
+      "document_version": "v1.22",
+      "context7": {
+        "status": "resolve-library-id and query-docs succeeded",
+        "transport": "https://mcp.context7.com/mcp",
+        "libraries": [
+          "/remix-run/react-router",
+          "/podman-container-tools/podman",
+          "/websites/postgresql_18",
+          "/openapi-ts/openapi-typescript"
+        ]
+      },
+      "version_snapshot_changed": false,
+      "generator_resolution": "Unresolved. Candidate single-root-lockfile tool workspace first; separate tool lockfile requires a concrete contract exception. Neither candidate has been installed or tested.",
+      "phase1_completion_blocked_by_generator_conflict": true,
+      "checks": "Document/static checks and selected official metadata/docs only; no runtime, dependency install, container or physical-device tests.",
+      "superseded_by": "v1.23 compatible greenfield baseline; the historical TS7 blocker/candidates no longer describe the selected combination."
     }
   ]
 }

@@ -1,6 +1,20 @@
-# rbac_sys：RBAC Phase 1 完整基础系统重建提示词 v1.21
+# rbac_sys：RBAC Phase 1 完整基础系统创建提示词 v1.23
 
 > 本文件由 `docs/prompts/rebuild-rbac-system-v1.md` 实例化；第 1 节唯一输入块已填写，不重复询问已有参数，不擅自改名或改端口。
+
+### v1.23 变更记录
+
+- 明确本目录用于从零创建全新工程；移除旧系统行为审计、数据映射与升级既有数据库等创建前提，保留新系统自身 schema 初始化、备份恢复和部署能力。
+- 版本选择以互相兼容为硬约束，在此前提下采用截至 2026-09-08 的最新稳定版本组合；不依赖本机已安装版本，不要求每项都取独立最高版本。
+- TypeScript 选用满足 openapi-typescript 7.13.0 的 ^5.x peer 的最高稳定版 5.9.3；Vitest 5.0.0 未通过严格类型检查，选用验证通过的最高兼容稳定版 4.1.11；共享一个编译器与根 lockfile，移除 TS7 冲突占位和工具隔离候选方案，不再将合理兼容选型当作需要重复确认的例外。
+
+以下旧版本变更记录仅供模板溯源，不是新工程的升级任务或当前版本约束；v1.23 正文及版本表为准。
+
+### v1.22 变更记录
+
+- 审计复核：修正 BKP-012 的 PG16 验收残留；增加当前 PG18 文档依据，并显式区分历史 PG16 引用。55 项版本及 2026-09-08 快照保持不变。
+- 明确 React Router 8 的包入口/ESM 用法，增加前置兼容性验证顺序、生成器隔离候选方案及 Phase 1 阻塞条件；候选方案未执行，未新增第二 lockfile 或降低应用 TypeScript 版本。
+- 核对 Podman 默认值与移除支持的不同时间点，补充 Podman 6 的宿主平台限制；Context7 本轮四个库的 resolve-library-id/query-docs 均成功，不依据其他会话的工具列表推断本会话不可用。
 
 ### v1.21 变更记录
 
@@ -70,7 +84,7 @@
 
 ## 1. 执行原则
 
-你是一名资深全栈架构师、安全工程师、数据库工程师和 UI 设计师。直接在当前 monorepo 中实现本提示词，不要擅自扩大范围。
+你是一名资深全栈架构师、安全工程师、数据库工程师和 UI 设计师。按本提示词及 template_inputs 在目标目录从零创建全新 monorepo，不要擅自扩大范围。
 
 开始编码前必须使用 Context7 核对第 2 节固定版本的 React、React Router、TanStack Query、FastAPI、Pydantic、SQLAlchemy asyncio、Alembic、asyncpg、PyJWT、pwdlib、Redis 和 Playwright 用法。若 Context7 不可用，必须明确记录并改查官方文档，不得假称已查询。
 
@@ -78,12 +92,11 @@
 
 1. 本文件中的表结构、API 契约和测试用例。
 2. 安全性与数据不丢失。
-3. 当前仓库中仍适用于 RBAC 的行为。
-4. 框架官方最佳实践。
+3. 与本次兼容版本组合一致的官方用法和最佳实践。
 
 不得自行增加业务模块，也不得以“以后可能需要”为理由实现一套庞大平台。
 
-本次重建使用由本节模板参数派生的全新数据库和全新 Alembic baseline。旧数据库、旧 migration 和 `storage/` 仅作为只读参考，禁止 drop、truncate 或原地改造成新 schema。只迁移既有用户、角色和权限时，先生成可审计的数据映射与 dry-run 报告，再由用户单独授权执行；Phase 1 的完成不依赖旧业务数据迁移。
+本文件是全新工程创建契约，不是已有工程升级或改造方案。仅以本提示词和模板输入为依据，从空数据库生成全新 Alembic baseline、schema、初始化权限及 bootstrap 账户；不要求旧源码、旧数据库、旧用户数据、行为保留映射或跨版本升级步骤，也不连接同机其他项目数据库来推导需求。目标目录如含无关文件或资源，不覆盖、不把它们变成生成前提。文中 migration 指新工程的 schema 管理；备份/恢复、灾难恢复与部署回滚是新系统交付的运行能力，不是迁移已有项目的任务。
 
 ### 模板输入、项目标识与同机隔离契约
 
@@ -147,39 +160,40 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 
 ## 2. 固定技术栈
 
-以下技术名称、职责及下表精确版本是约束。版本基准固定为 **2026-09-08（本次现在核对）**，不能推迟到实施当天选版，也不按本机安装、缓存、旧 lockfile 或历史修订选型；未来执行本模板仍使用本快照。排除 alpha/beta/RC、preview、nightly、dev；0.x 项目以官方非预发布渠道为准。历史修订中“实施/实现当日最新”及旧主版本限制均由本节替代。
+以下技术名称、职责及下表精确版本是约束。选型标准是 **互相兼容优先，在此前提下采用截至 2026-09-08（本次现在核对）的最新稳定版本组合**。最新指满足整套依赖、运行时、构建和部署约束的最新稳定版本，不是逐项独立取最高版本再保留冲突。排除 alpha/beta/RC、preview、nightly、dev；0.x 项目以官方非预发布渠道为准。选择较低但最新兼容版本属于本标准已授权的正常选型，无需重复确认；须记录被排除的更新版本、实际限制及选定版本的证据，不能因本机已有安装、缓存或旧 lockfile 选择旧版。
 
-生成工程时用 Context7 核对下表版本的 API/迁移说明，并把本次版本来源、engines/Requires-Python/peer dependencies 及实际验证结果写入 `docs/toolchain.md`；这一步复核用法与兼容性，不重新选择当日 latest。传递依赖由解析器按上游约束选择并锁定，不强行覆盖不兼容范围。工具安装用于落实快照，不反向决定版本。未来升级需显式修订快照与 lockfile；首次生成不能顺便升级。
+使用 Context7 核对用法，以官方发布元数据及 engines/Requires-Python/peer dependencies 核对候选版本，执行依赖解析和必要的最小集成验证后形成固定组合。当前兼容快照内嵌于下表，后续生成沿用它，不推迟到实施当天重新选 latest。传递依赖按上游兼容约束解析并锁定，不强行覆盖。`docs/toolchain.md` 分别记录声明范围核对、安装解析、构建/测试、平台/服务实测状态；局部验证不得代表整套工程已通过验收。工具安装用于落实选型，不反向决定选型。
 
 直接依赖在 manifest 使用下表精确版本（npm 不加 ^/~，Python 使用 ==）；运行时声明、工具链、CI 同步固定，`uv.lock`/`package-lock.json` 锁定完整传递依赖，生产镜像锁定 digest。无需在本次文档修订安装工具或运行应用。
 
 - Python 3.14.7；仓库提交 `.python-version`。
 - uv：使用本次快照固定版本，仓库记录到 `docs/toolchain.md`；CI 使用 `uv lock --check` 与 `uv sync --locked`，禁止手改 `uv.lock`。
 - 前端：Node.js、npm、React、TypeScript strict、Vite、React Router、TanStack Query、Tailwind CSS（均按下表精确版本）。
+- Router 8 使用 `react-router` 包；`BrowserRouter`、`createBrowserRouter`、`Link` 等从 `react-router` 导入，浏览器 `RouterProvider` 从 `react-router/dom` 导入。不得新增 `react-router-dom` 依赖或保留旧入口。采用 ESM（相关 package 的 `type: module`、TypeScript `module: ESNext`/`moduleResolution: Bundler`），Vite/Vitest 配置使用 ESM；维持同一 React SPA，不因迁移指南示例引入 SSR/Framework Mode。ESM-only 不代表 Node.js 26 的所有 CJS 调用均必然失败，互操作必须按实际加载路径验证，不依赖旧 CJS 产物或未经核实的 require 用法。
 - 前端表单与校验：React Hook Form + Zod；基础交互使用 Radix UI primitives，图标只使用 Lucide React；禁止再引入第二套组件库或图标库。
-- 移动端支持：iOS Safari、Android Chrome 与 iPad 浏览器复用同一套 React SPA、路由与组件，仅通过 Tailwind CSS 响应式断点、现有 Radix UI/Lucide 交互与浏览器原生特性适配布局与触控；不引入 PWA（Service Worker/manifest/离线缓存）、Capacitor、React Native 或任何独立 mobile 代码库/构建产物。
+- 移动端支持：iOS Safari、Android Chrome 与 iPad 浏览器复用同一套 React SPA、路由与组件，仅通过 Tailwind CSS 响应式断点、所选 Radix UI/Lucide 交互与浏览器原生特性适配布局与触控；不引入 PWA（Service Worker/manifest/离线缓存）、Capacitor、React Native 或任何独立 mobile 代码库/构建产物。
 - 前端测试：Vitest + React Testing Library + MSW；浏览器和黑盒 E2E 使用 Playwright Test。不得用 Enzyme、Cypress 或 Jest 建立第二套测试栈。
 - Playwright 的 npm package、lockfile 与 E2E 容器镜像版本必须严格相同；镜像使用本次快照固定的 `mcr.microsoft.com/playwright:v1.63.0-noble@sha256:<digest>`，禁止 `latest`。浏览器及系统依赖在镜像构建/CI 准备阶段安装，应用容器启动时不得运行 `playwright install` 或访问公网。提供独立 `e2e` service/profile，按第 14 节共享 web-test 网络命名空间、只读挂载测试 CA、不得发布宿主机端口；Linux Chromium 按官方建议提供足够共享内存（优先 `ipc: host`，受限环境使用经压测的 `shm_size`），CI 至少真实运行 Chromium 和 Firefox。若 package 与镜像版本不一致或浏览器 executable 缺失，测试必须在准备阶段失败并给出修复命令。
 - API 类型：`openapi-typescript` + `openapi-fetch` 生成/消费契约；生成文件只输出到 `packages/api-client`，禁止手改。
 - 后端：FastAPI、Pydantic、SQLAlchemy asyncio、Alembic、asyncpg（均按下表精确版本）。
 - 后端基础依赖限定为 redis-py asyncio、HTTPX、PyJWT、pwdlib[argon2]、email-validator、`cryptography`（仅用于 Ed25519 备份签名/验证）；Phase 1 禁止引入 Celery、RQ、Kafka、RabbitMQ 或另一套 ORM。
 - 迁移：Alembic；禁止在应用启动时调用 `create_all()`。
-- 数据库：PostgreSQL 本次快照固定版本；新建数据库使用所选版本，已有数据库跨 major 升级必须另行执行迁移与恢复验证，不直接复用旧数据目录。
-- Redis：Redis Open Source 本次快照固定版本，记录精确版本并锁定镜像 digest，用于限流、短期权限缓存和跨副本协调；Redis 故障不能导致权限错误放行。版本解析完成后不在构建或启动时自动升级；后续按本节升级流程更新。
+- 数据库：PostgreSQL 本次快照固定版本；从空数据库创建 schema 与全新 Alembic baseline，不复用已有项目数据目录。
+- Redis：Redis Open Source 本次快照固定版本，记录精确版本并锁定镜像 digest，用于限流、短期权限缓存和跨副本协调；Redis 故障不能导致权限错误放行。版本解析完成后不在构建或启动时自动升级；生成工程只消费已确认的兼容快照。
 - RedisInsight：仅允许用于 development 环境，Compose 使用 `debug` profile，使用官方 `redis/redisinsight` 镜像并锁定本次快照固定 tag 与 digest，容器端口固定 5540，命名 volume 只挂载 `/data`，健康检查调用 `/api/health/`。它与 Redis 加入同一个内部网络，README 使用 service host `redis:6379` 说明首次连接；宿主机 UI 只能通过 `${DEV_BIND_ADDRESS}:${REDISINSIGHT_HOST_PORT}:5540` 访问。production/staging 禁止启用、发布或携带 RedisInsight 数据卷。
 - 密码：Argon2id，固定使用 `pwdlib[argon2]`；Context7 若无法解析 pwdlib，不得卡住实施或改用不相关库，直接查阅 pwdlib 官方文档/官方源码与发布元数据，把链接、版本和关键 API 记录到 `docs/toolchain.md` 后继续。
 - Token：PyJWT；access JWT + rotation refresh session。
 - 测试：Pytest + AnyIO pytest plugin（统一使用 `@pytest.mark.anyio`，不再并装 pytest-asyncio）、HTTPX AsyncClient、前端组件测试、Playwright Test、OpenAPI schema/coverage 检查。
-- 容器：Podman 6.1.1、`podman compose`；本次参考 compose provider 固定为 podman-compose 1.6.0；其他 provider 不得因本机已有就自动采用。实现时锁定精确版本，并在 `docs/toolchain.md` 记录 OS/版本/架构、Podman、machine provider（适用时）、compose provider/version、网络/存储后端及验证结果。支持矩阵区分“计划支持/已验证/不支持”，升级大版本先核对平台支持与迁移说明，再执行第 15 节真实 provider/Quadlet 验证；不能假设所有机器使用同一个外部 provider。
+- 容器：Podman 6.1.1、`podman compose`；本次参考 compose provider 固定为 podman-compose 1.6.0；其他 provider 不得因本机已有就自动采用。实现时锁定精确版本，并在 `docs/toolchain.md` 记录 OS/版本/架构、Podman、machine provider（适用时）、compose provider/version、网络/存储后端及验证结果。支持矩阵区分“计划支持/已验证/不支持”，创建工程前核对所选版本的平台支持、provider 与配置用法，再执行第 15 节真实 provider/Quadlet 验证；不能假设所有机器使用同一个外部 provider。
 - 入口与静态资源：本地/单机生产使用 Nginx；云环境允许由云 Load Balancer/Ingress/CDN 替代部分职责。
 - 本地开发 CA：mkcert，使用本次快照固定版本并把版本记录到 `docs/toolchain.md`；只负责开发证书，不进入生产镜像或生产证书流程。禁止用 Vite basic-ssl 的临时自签名证书替代受信本地 CA。
 - 日志管道：应用/Nginx 只输出结构化 stdout/stderr；单机部署固定使用本次快照固定版本的 OpenTelemetry Collector Contrib 镜像并锁定 digest，云部署可使用等价托管 agent，负责采集、allowlist/redaction、batch、retry、持久化有界队列和集中导出。应用业务代码不得绑定某个日志厂商 SDK，实际版本记录到 `docs/toolchain.md`。
 
-若本次快照版本存在真实不兼容，先按官方迁移指南适配并验证；仍无法兼容时记录冲突、受影响项及最小版本例外方案，取得用户决定后才能降低版本，不能静默退回旧版或替换框架。升级依赖必须显式执行并提交 lockfile diff；CI 和容器构建只消费锁文件，不自动升级。
+若发现真实不兼容，依据官方约束在同一技术内选择满足整套组合的最高稳定版本，同步更新两份提示词、版本依据及受影响检查；不得用 `--force`、`--legacy-peer-deps`、放宽 peer 或忽略测试掩盖冲突。不要为保留不兼容的最高版本引入多套编译器或额外 lockfile。只有变更技术种类、功能/安全要求等超出既定标准的取舍才需要新的决定。CI 和容器构建只消费精确 manifest 与锁文件，不自动追新。
 
-### 当前稳定版本快照（2026-09-08）
+### 最新兼容稳定版本快照（2026-09-08）
 
-以下精确版本是本次现在查询的结果，也是生成工程必须使用的版本，不是留到实施当天再取 latest。npm 按官方 registry 的 latest 正式发布，PyPI 按非预发布且未撤回版本，GitHub 按官方非 prerelease release 核对；Nginx 采用官方明确标记的 stable 分支。版本源链接可复核，发布日期是发布元数据而非本机安装日期。
+以下精确版本是本次现在核对并按兼容约束选择的结果，也是生成工程使用的固定组合。npm latest/PyPI/GitHub 非预发布元数据提供候选；如最新候选不兼容，则从官方已发布稳定版本中选择最高兼容版本；Nginx 采用官方明确标记的 stable 分支。版本源链接可复核，发布日期是发布元数据而非本机安装日期。
 
 | 技术/包 | 固定版本 | 发布日期（UTC；仅日期来源按官方日期） | 官方来源 |
 | --- | --- | --- | --- |
@@ -190,7 +204,7 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 | npm | `12.0.2` | 2026-07-29 | [发布元数据](https://registry.npmjs.org/npm) |
 | react | `19.2.8` | 2026-07-21 | [发布元数据](https://registry.npmjs.org/react) |
 | react-dom | `19.2.8` | 2026-07-21 | [发布元数据](https://registry.npmjs.org/react-dom) |
-| typescript | `7.0.2` | 2026-07-08 | [发布元数据](https://registry.npmjs.org/typescript) |
+| typescript | `5.9.3` | 2025-09-30 | [发布元数据](https://registry.npmjs.org/typescript/5.9.3) |
 | vite | `8.2.2` | 2026-08-20 | [发布元数据](https://registry.npmjs.org/vite) |
 | @vitejs/plugin-react | `6.1.1` | 2026-08-28 | [发布元数据](https://registry.npmjs.org/@vitejs/plugin-react) |
 | react-router | `8.3.1` | 2026-08-28 | [发布元数据](https://registry.npmjs.org/react-router) |
@@ -201,7 +215,7 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 | zod | `4.5.4` | 2026-08-29 | [发布元数据](https://registry.npmjs.org/zod) |
 | Radix UI primitives（统一入口 radix-ui） | `1.6.7` | 2026-07-24 | [发布元数据](https://registry.npmjs.org/radix-ui) |
 | lucide-react | `1.42.0` | 2026-09-07 | [发布元数据](https://registry.npmjs.org/lucide-react) |
-| vitest | `5.0.0` | 2026-09-03 | [发布元数据](https://registry.npmjs.org/vitest) |
+| vitest | `4.1.11` | 2026-08-18 | [发布元数据](https://registry.npmjs.org/vitest/4.1.11) |
 | @testing-library/react | `16.3.3` | 2026-08-27 | [发布元数据](https://registry.npmjs.org/@testing-library/react) |
 | @testing-library/dom | `10.4.1` | 2025-07-27 | [发布元数据](https://registry.npmjs.org/@testing-library/dom) |
 | @testing-library/user-event | `14.6.7` | 2026-09-02 | [发布元数据](https://registry.npmjs.org/@testing-library/user-event) |
@@ -241,9 +255,15 @@ DEV_PUBLIC_ORIGIN    = https://rbac-sys.localhost:31443
 
 配套类型定义、Vite 插件与测试 DOM 已列入快照；它们不构成另一套框架。Radix primitives 统一通过表中的 `radix-ui` 入口使用，其内部 `@radix-ui/*` 按依赖解析锁定，不把聚合包版本误用于独立包。`AnyIO pytest plugin` 随 AnyIO 提供，`pwdlib[argon2]` 的 extra 采用 pwdlib 本体版本，算法 Argon2id/Ed25519 与协议版本不按软件包 latest 处理。React/React DOM 以及 Tailwind/其 Vite 插件分别保持表中配套版本。
 
-**兼容性核对与已知冲突：** Node.js 26.8.1 是当前正式 Current 版；其自带 npm 11.19.0 不等于 npm 当前最新版，工程工具链单独固定 npm 12.0.2。官方元数据中 npm、Vite、React Router、Vitest 的 Node engines 接受所选 Node 版本，React 相关 peer 范围接受 19.2.8；这只是声明范围核对，不是运行测试通过。`openapi-typescript@7.13.0` 的 `peerDependencies.typescript=^5.x` 与本表 `typescript@7.0.2` 明确冲突；保持两项当前版选型并记录未解决，不能使用 `--force`/`--legacy-peer-deps` 假装兼容，也不能静默降级 TypeScript。实施前须验证能否在不降低应用 TypeScript 版本的前提下隔离生成器依赖；任何版本例外或 workspace/工具隔离变更须形成具体方案再决定，当前未修改单一根 lockfile 契约。不能在解决此项前宣称整套最新版本可直接安装运行。
+**兼容性选型：** Node.js 26.8.1 与 npm 12.0.2 分别固定；Node 自带 npm 不决定包管理器版本。TypeScript 独立最新稳定候选是 7.0.2，但 `openapi-typescript@7.13.0` 要求 `typescript: ^5.x`，6.x/7.x 均不满足。npm 官方发布清单中满足此范围的最高稳定版本为 **TypeScript 5.9.3**，因此整个工程统一采用 5.9.3；React Router 8、Vite 8 等仍按表中版本；Vitest 选用 4.1.11。此为兼容优先下的新工程选型，不是对已有工程降级。生成器与应用共用同一 TypeScript 和根 `package-lock.json`，不新增 `tools/api-typegen`、第二编译器或第二 lockfile。
 
-镜像对应软件版本固定为本快照；Playwright 使用 `mcr.microsoft.com/playwright:v1.63.0-noble`。平台/发行版后缀、镜像 digest 与浏览器 revision 必须在生成部署清单时从这些固定版本的官方产物解析并验证，不能改取当时的新软件版本，不能编造 digest。本次没有拉取镜像或生成 lockfile，软件发布元数据核对不等于镜像/跨平台兼容性验证。完整机器可读元数据另存于 `docs/prompts/tech-stack-baseline-2026-09-08.json`；本表已内嵌全部版本，单独复制本模板不依赖该文件。
+Vitest 独立最新候选 5.0.0 在相同 fixture 的严格 `tsc --noEmit`（`skipLibCheck: false`）中出现 `@vitest/expect` 类型模块缺失及 `vitest/browser` 未导出 `MarkOptions` 两项错误；不能仅因 npm 安装或组件测试成功就选为已验证组合。官方稳定发布序列中次高版本 4.1.11 满足 Vite 8/Node 26 的声明约束，且通过同一完整类型检查、构建及组件测试，因此选入本次兼容快照。没有手改第三方声明、增加隐式类型 shim 或跳过库类型检查。
+
+前端最小验证覆盖全部选定 npm 直接依赖的严格 peer 安装、OpenAPI 类型生成、`tsc --noEmit`、Vite 构建及组件交互；Python 依赖按所选 Python 3.14 核对目标平台的解析。本次最终组合已通过严格安装与完整依赖树检查、OpenAPI 生成、完整 typecheck、Vite build、两项组件/请求集成测试、npm ci 重建后的复验及生成物一致性检查；Python 3.14 在 Windows/Linux 的依赖解析均通过。具体结果及未执行项以版本依据 JSON 中本次 `compatibility_validation` 为准，不能把依赖解析或最小 fixture 测试当作完整应用、真实服务、Podman 或移动真机验收。生成工程仍须执行第 13/15/17 节的完整验收。
+
+**创建前验证顺序：** 依赖解析/类型生成与 ESM 最小链路 → 空 PostgreSQL 18.6 schema 初始化及新系统备份恢复 → 所选 Podman/provider 与 HTTPS 网络 → 完整应用与移动 E2E。`CFG-006`/`CFG-007` 检查新工程是否正确落实兼容组合；不再预设存在必须留待未来解决的 TS7 peer 冲突。各阶段失败均记录并修复，不能宣称未执行的阶段已通过。
+
+镜像对应软件版本固定为本快照；Playwright 使用 `mcr.microsoft.com/playwright:v1.63.0-noble`。平台/发行版后缀、镜像 digest 与浏览器 revision 必须在生成部署清单时从这些固定版本的官方产物解析并验证，不能改取当时的新软件版本，不能编造 digest。本次兼容性 fixture 的 lockfile 只作为验证产物，不是生成工程的 lockfile；镜像/跨平台服务仍须单独验证。完整机器可读元数据另存于 `docs/prompts/tech-stack-baseline-2026-09-08.json`；本表已内嵌全部版本，单独复制本模板不依赖该文件。
 
 ## 3. Phase 1 范围
 
@@ -783,7 +803,7 @@ system.restore
 - `super_admin` 的启用状态和权限集合是核心不变量：该角色不能被停用或重命名，并且在任意时刻必须恰好包含权限目录中的全部权限。通用 `PUT /admin/roles/{id}/permissions` 命中 `super_admin` 时固定返回 409 `SYSTEM_ROLE_PERMISSIONS_IMMUTABLE`，即使调用者拥有 `roles.manage_permissions` 也不能删减或手工改写。
 - 幂等 permission seed 每次新增权限时，必须在同一事务内把该权限补到 `super_admin` 后再提交；删除权限前先处理全部引用。启动/ready check 和备份恢复验证都断言 `super_admin permissions == permission catalog`，不满足时 readiness 失败且报警。
 - 权限目录不能由普通 CRUD 创建、修改或删除。
-- 本项目权限码唯一规范是点号形式 `resource.action`，并由 `ck_permissions_code` 强制；这是新项目的有意约定，不兼容或自动转换旧项目的 `resource:action`。迁移旧授权时必须使用显式 mapping 并对未知 code fail closed，禁止同时支持两种分隔符。
+- 本项目权限码唯一规范是点号形式 `resource.action`，并由 `ck_permissions_code` 强制；未知权限码 fail closed，不接受 `resource:action` 等其他形式，不生成旧项目权限映射或兼容分支。
 - 角色/权限变化后，在同一数据库事务中递增所有受影响用户的 `auth_version`；事务提交后 best-effort 清理 Redis cache。
 - Access JWT 带 `sub`、`jti`、`iss`、`aud`、`iat`、`exp`、`auth_version`、`sid`，其中 `sid=refresh_sessions.family_id`，rotation 不改变 sid。每次已认证请求从 PostgreSQL 验证用户状态、auth_version 和该 family 的当前有效后继（未使用、未撤销、未过期且版本匹配）；Redis 仅缓存权限集合，不能用过期缓存替代这些即时撤销检查。已经开始的请求不追溯取消，撤销提交后开始的请求必须拒绝。
 
@@ -1256,7 +1276,7 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - 用户列表、角色列表、会话列表、登录历史与操作历史等数据表格在窄屏（`md` 以下）降级为卡片/堆叠布局展示关键字段与操作，不依赖横向滚动完成主操作；`md` 及以上恢复表格视图；768–1023px 表格允许容器内横向滚动，但主操作始终可达，页面本身不得横向溢出。卡片保留全部字段的可访问入口、筛选、排序、分页与操作权限，不能仅隐藏列而丢失功能。
 - 触屏设备上仅 hover 才显示的操作（如仅 hover 出现的按钮）必须提供可见的触屏等效触发方式，不得使功能在触屏下不可达。
 - 移动/平板浏览器方向切换（portrait/landscape）不导致状态丢失、白屏或需要刷新才能恢复布局。
-- Drawer 使用现有 Radix Dialog 语义、可见关闭按钮、焦点约束、背景不可交互与滚动锁；选中路由后关闭，跨越 lg 断点时清理遮罩/滚动锁并将焦点移到合理可见位置。
+- Drawer 使用所选 Radix Dialog 语义、可见关闭按钮、焦点约束、背景不可交互与滚动锁；选中路由后关闭，跨越 lg 断点时清理遮罩/滚动锁并将焦点移到合理可见位置。
 - 手机表单单列，使用适当 input type/inputmode/autocomplete；输入字体至少 16 CSS px。软键盘打开时输入项、错误提示及提交操作仍可滚动到达；全屏弹层使用动态视口高度（如 100dvh，保留回退），处理 safe-area-inset-* 与浏览器工具栏，不能只用固定 100vh。320 CSS px 下普通页面无横向溢出；200% 文本缩放不丢失内容与操作。
 - 交付浏览器支持矩阵：依据所选 Tailwind、Vite 构建目标和实际 CSS/JS 特性共同确定 iOS/iPadOS Safari 与 Android Chrome 的最低版本及测试版本，不笼统承诺所有 iOS/Android。发布前至少在一台 iPhone/iPad Safari 和一台 Android Chrome 真机上验证关键路径、软键盘、安全区域及横竖屏；记录设备/OS/浏览器/日期，缺设备则记受环境限制，不计通过。真机使用可达且证书受信的 staging HTTPS 入口，不把桌面 localhost 地址用于手机，也不为测试关闭 TLS 校验。
 - 折叠图标有 tooltip 和 accessible name；当前页、父组、hover、focus 状态可区分。
@@ -1420,7 +1440,7 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `BKP-009` Given pg_restore 或验证失败，Then restore=failed、不会进入 ready_for_cutover，当前 DATABASE_URL 不改变。
 - `BKP-010` Given 两个并发 restore 和并发 backup，Then lease 保证同一时刻最多一个 restore，重复请求不产生两个目标库。
 - `BKP-011` Given restore 完成，Then ANALYZE、Alembic revision、TOC/catalog、RBAC 完整性和只读 smoke 结果写入 verification。
-- `BKP-012` Given 仅有可信 `${BACKUP_EXTENSION}` bundle、空 PostgreSQL 16、目标 owner 凭据和受信 signing public key，When 按 disaster-recovery CLI/runbook 执行，Then 无需原仓库数据库或签名私钥即可重建全部应用数据库对象和数据。
+- `BKP-012` Given 仅有可信 `${BACKUP_EXTENSION}` bundle、空 PostgreSQL 18.6（与第 2 节快照一致）、目标 owner 凭据和受信 signing public key，When 按 disaster-recovery CLI/runbook 执行，Then 无需原仓库数据库或签名私钥即可重建全部应用数据库对象和数据。
 - `BKP-013` Given backup 正被 restore 引用或 safety backup 仍在保护期，When 删除/retention job，Then 409/跳过；过期且无引用时才删除对象文件并保留脱敏审计。
 - `BKP-014` 每月 restore drill 使用隔离数据库真实恢复最近备份；只运行 `pg_restore --list` 不算恢复演练成功。
 - `BKP-015` Given source database 名为 A、请求 target database 名为 B，When 常规或 break-glass 恢复，Then archive 不含 CREATE DATABASE、实际只创建/写入 B、从不创建/drop A，所有 pg_restore 命令均不使用 `--create/-C`。
@@ -1463,7 +1483,11 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `FE-018` Given 各列表在 md 以下卡片布局及 md 以上表格布局，Then 字段入口、筛选/排序/分页/权限操作完整；独立控件点击区至少 44×44 CSS px（含 compact），其他目标逐项核验 SC 2.5.8；同时覆盖角色权限矩阵与长文本。
 - `FE-019` Given Playwright 使用官方 `devices` 注册表中的手机（如 `iPhone 14`）、平板（如 `iPad Pro 11`）与 Android（如 `Pixel 7`）设备描述运行登录、账户概览与管理员列表关键路径，Then 触控点击/tap 交互、viewport meta 缩放限制与断点布局均通过；横竖屏切换不产生白屏或状态丢失。iPhone/iPad 项目显式使用 WebKit，Pixel 使用 Chromium；仅改变 viewport 不算完成设备模拟，模拟不计作真机结果。
 - `FE-020` Given 第 11 节支持矩阵的 iOS/iPadOS Safari 与 Android Chrome 真机，Then 登录、资料编辑、管理员列表/确认操作、软键盘、安全区域、横竖屏及 200% 文本缩放均可用；按设备记录证据，未执行不得用 FE-019 替代。
-- `CFG-006` Given 按本模板首次生成或再次生成，Then 运行时、工具、直接依赖与服务软件版本逐项匹配 2026-09-08 快照；manifest 不使用漂移范围，生成日期和本机安装状态不影响版本，lockfile/镜像/PG client 与固定版本一致；已知 peer 冲突必须显式处理，未解决不得计通过。未来变更须显式修订快照并保留来源及决定。
+- `CFG-006` Given 按模板创建全新工程，Then 运行时、工具、直接依赖与服务软件版本落实 2026-09-08 最新兼容稳定快照；manifest 精确、lockfile 与之匹配，TypeScript 统一 5.9.3 并满足生成器 peer；较新但不兼容候选的排除证据明确，生成日期和本机安装状态不决定版本。
+- `CFG-007` Given 固定兼容快照的前端工具链，Then 干净安装与根 lockfile 重建无 peer 绕过或额外编译器；生成的 OpenAPI 类型通过同一 TypeScript 5.9.3 typecheck/build，Router 8 入口与 ESM 配置可运行；生成物重现一致，失败或未执行项不得计通过。
+- `CFG-008` Given 仅有模板输入与空目标目录/空项目数据库，Then 可创建新工程并完成 baseline/seed；不要求提供旧项目源码或数据、不连接同机其他项目数据库、不生成旧系统升级/权限映射任务；已存在的无关资源保持不变。
+
+
 
 
 ### 部署与并发烟雾测试
@@ -1501,7 +1525,7 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `DEP-023` Given E2E 成功、失败或取消，Then 本次执行器/helper 被清理，本次启动的专用测试服务按所有权停止，开发服务及原有数据卷不变；拓扑文档、JSON 清单与真实 provider/Quadlet 无漂移。
 - `DEP-024` Given 干净宿主机尚未信任开发 CA，Then 启动诊断准确报告信任未完成；证书签发、容器 healthy 或指定 CA 的请求成功不能使该项通过。使用同一 CA 安装信任并重启目标浏览器后，实际 HTTPS 登录页无证书警告；系统与浏览器结果分别记录。
 - `DEP-025` Given CA 安装权限被拒绝、CAROOT 不匹配、旧服务端证书或 CA 轮换，Then 明确报告对应阶段且不绕过验证；重复安装/签发保持幂等，轮换后新链通过、旧链在隔离信任验证中失败。撤销验证在专用测试信任库进行，不删除开发者共享 CA。
-- `CFG-005` Given 模板和实例升级，Then 参数展开除明确标题/实例说明外完全一致；两份版本及 README 一致，所有新增编号唯一，验证报告不能把未执行/环境受限项计入通过。
+- `CFG-005` Given 模板和实例修订，Then 参数展开除明确标题/实例说明外完全一致；两份版本及 README 一致，所有新增编号唯一，验证报告不能把未执行/环境受限项计入通过。
 
 ## 14. Nginx 与云部署基线
 
@@ -1753,6 +1777,7 @@ mkcert -version
 curl --version
 ```
 
+- 宿主支持范围必须符合锁定 Podman 6.1.1 的官方平台要求：不支持 Windows 10、Intel Mac、cgroups v1 或 iptables 路径；Windows 使用受支持的 Windows 11 环境，macOS 使用受支持的 Apple Silicon 环境，Linux 核对 cgroups v2/nftables。Podman Desktop 只是可选管理界面，不能据其能安装推定引擎平台受支持；不能为适应本机而降级快照。
 - 支持 Podman Desktop（Windows/macOS）和原生 Podman（Linux）。Windows/macOS 必须说明 `podman machine init/start`，但在 machine 已存在时不得重复创建。
 - `podman compose` 是对外统一命令；启动前验证 compose provider。项目脚本不得直接依赖某个未声明的 `docker-compose` 二进制。
 - 开发者只通过 `uv add/remove/sync/lock/run` 管理 Python 环境，不允许 `pip install` 污染项目 `.venv`。
@@ -1895,7 +1920,8 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 ## 16. 实施顺序
 
 0. 在任何源码写入前收集、规范化并验证全部模板输入，生成 `docs/project-identity.md` 与 `docs/ports.md`；完成 `CFG-*` 的双实例隔离 fixture，确认调用者提供的工程标识和端口不会与同机登记项冲突。
-1. 审计当前 RBAC 数据和行为，写出保留/废弃映射，不修改 `storage/`。
+0.1. 执行第 2 节兼容组合的依赖解析/类型生成/ESM 最小链路，记录 CFG-006/CFG-007；失败先定位并修复，不通过强制安装继续。
+1. 根据本契约梳理新工程的功能、API、表结构与验收清单；确认新建数据库及 namespace，执行 CFG-008，不以旧工程或旧数据为前置输入。
 2. 建立 monorepo 命令、`.gitignore`/各 context `.containerignore`、后端基础、配置和测试数据库 fixture；先让 secret/build-context 检查通过再构建镜像。
 3. 按第 5 节创建第一组 Alembic migration，并完成 `DB-*` 测试。
 4. 完成幂等 permission/role/bootstrap-admin seed；bootstrap 密码只能来自环境变量，首次登录要求修改。
@@ -1914,7 +1940,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 必须提交 `docs/implementation-status.md` 与机器可读的 `docs/verification-result.json`。按需求/测试编号分别记录实现状态（未实现/部分实现/已实现）和验证状态（未执行/通过/失败/受环境限制），附命令、执行日期、源码 revision 或 dirty 状态/内容 fingerprint、平台与工具版本、脱敏结果及 artifact 路径。统计须给出适用总数、执行/通过/失败/跳过数量，不能用少量通过用例替代完整矩阵；代码或部署配置变化后标记受影响证据待复验。
 
-开发工程可运行、功能矩阵完成、生产部署验证是不同里程碑。平台或凭据不足时记录缺少的前提，不得把静态配置验证写成真实部署通过；首次交付执行一次归档恢复演练，后续季度演练记录到期计划与实际结果，不要求等待一个季度，也不能声称未来演练已通过。提示词版本与实现版本独立，文档升级不会使现有实现自动符合新契约。
+开发工程可运行、功能矩阵完成、生产部署验证是不同里程碑。平台或凭据不足时记录缺少的前提，不得把静态配置验证写成真实部署通过；首次交付执行一次归档恢复演练，后续季度演练记录到期计划与实际结果，不要求等待一个季度，也不能声称未来演练已通过。提示词修订版本与新工程实现/验收状态分别记录，更新模板不代表任何生成工程已经通过验收。
 
 只有同时满足以下条件才算 Phase 1 完成；分阶段报告不豁免任何适用条件：
 
@@ -1958,6 +1984,19 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 ## 18. 本次文档修订的技术依据
 
+2026-09-08（v1.23）：用户明确本目录用于创建新工程，版本标准为互相兼容前提下的最新稳定版。本轮远程 Context7 对 `/openapi-ts/openapi-typescript` 完成 resolve-library-id/query-docs，核对单一 TypeScript 工具链、ESM 配置、生成与 typecheck 用法；[生成器 7.13.0 元数据](https://registry.npmjs.org/openapi-typescript/7.13.0)声明 ^5.x；[TypeScript 官方发布清单](https://registry.npmjs.org/typescript)中满足该约束的最高非预发布版本为 [5.9.3](https://registry.npmjs.org/typescript/5.9.3)。选型无需额外版本例外确认，v1.21/v1.22 的 TS7 阻塞和隔离候选已由兼容组合替代。 同时查询 [Vitest 发布元数据](https://registry.npmjs.org/vitest)：5.0.0 的类型声明未通过临时 fixture 的完整 typecheck，4.1.11 是随后最高稳定版本且通过复验，因此选定 [4.1.11](https://registry.npmjs.org/vitest/4.1.11)。验证使用按官方哈希校验下载的 Node 26.8.1/npm 12.0.2/uv 0.12.10，不按系统已安装工具选型。验证范围与结果记录在版本依据 JSON 的 compatibility_validation，不推定未实测服务通过。
+
+以下保留模板历史审计记录；它们不是当前新工程的选型、旧项目升级步骤或待解决事项。当前要求以 v1.23 正文与兼容快照为准。
+
+
+2026-09-08（v1.22 审计复核）：本轮通过远程 `https://mcp.context7.com/mcp` 成功执行四个库的 `resolve-library-id` 与 `query-docs`：`/remix-run/react-router`、`/podman-container-tools/podman`、`/websites/postgresql_18`、`/openapi-ts/openapi-typescript`。远程 MCP 成功与某客户端没有注册 Context7 工具可以同时成立；资源列表也不是工具列表。Context7 片段可能跨版本，以下关键结论另以官方来源核对：
+
+- 当前实施依据：[PG18 passfile](https://www.postgresql.org/docs/18/libpq-pgpass.html)、[PG18 libpq 环境变量](https://www.postgresql.org/docs/18/libpq-envars.html)、[PG18 升级规则](https://www.postgresql.org/docs/18/upgrading.html)。BKP-012 使用 18.6；下方 PG16 链接仅保留历史溯源，不作为当前验收版本。
+- [React Router changelog](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v800) 与 [8.3.1 发布包元数据](https://registry.npmjs.org/react-router/8.3.1)确认 ESM 及入口；[Node.js 26 模块文档](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require)说明 require(esm) 有条件受支持，不能笼统认定所有 CJS 工具必然失败。
+- [Podman 5.0](https://github.com/podman-container-tools/podman/releases/tag/v5.0.0)与 [6.0](https://github.com/podman-container-tools/podman/releases/tag/v6.0.0)发布记录区分默认值变化、移除旧支持与宿主平台限制；[Vite 8 公告](https://vite.dev/blog/announcing-vite8)的架构变更发布于 2026-03-12，不是本次快照当天的新变化。
+- [TypeScript 7 公告](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)说明旧编译器 API 边界；[openapi-typescript 7.13.0 元数据](https://registry.npmjs.org/openapi-typescript/7.13.0)仍声明 TypeScript ^5.x；[npm peerDependencies](https://docs.npmjs.com/cli/v12/configuring-npm/package-json/#peerdependencies)不能替代具体依赖树实验。第 2 节隔离方案未安装/执行，不宣称冲突已解决。
+
+
 2026-09-08（v1.21）：远程 Context7 重试成功。通过 `resolve-library-id` 后对 `/websites/tailwindcss`、`/microsoft/playwright`、`/vitejs/vite` 执行 `query-docs`，取得响应式前缀语义、设备项目/镜像配置与 Vite Node engines 的官方文档片段。Context7 索引返回的部分版本较旧，因此精确版本以第 2 节每行官方发布元数据为准，未把索引版本当最新版本。本次同时读取 npm latest、PyPI JSON、官方 GitHub releases、Node 发布索引及 Python/PostgreSQL/Nginx 官网；发布版本与日期已内嵌快照。Context7 示例中的关闭 HTTPS 校验不采纳，继续执行本契约受信 CA 要求。只验证文档/发布元数据及部分声明约束，未运行依赖安装、应用测试、容器或真机；openapi-typescript/TypeScript 冲突仍显式未解决。以下 v1.20 的失败是前次尝试历史，本次已连通。
 
 
@@ -1973,7 +2012,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 2026-09-06（v1.14）再次使用 Context7 核对：
 
-- [PostgreSQL 16 passfile](https://www.postgresql.org/docs/16/libpq-pgpass.html) 与 [libpq 环境变量](https://www.postgresql.org/docs/16/libpq-envars.html)：passfile 文件权限和 `PGPASSFILE`；`PGPASSWORD` 不是默认安全替代。目录 0700 与秘密文件 0600 分别处理。
+- 历史核对（PG16；当前实施请用本节 v1.22 的 PG18 依据）：[PostgreSQL 16 passfile](https://www.postgresql.org/docs/16/libpq-pgpass.html) 与 [libpq 环境变量](https://www.postgresql.org/docs/16/libpq-envars.html)：passfile 文件权限和 `PGPASSFILE`；`PGPASSWORD` 不是默认安全替代。目录 0700 与秘密文件 0600 分别处理。
 - [Uvicorn proxy headers 实现](https://github.com/kludex/uvicorn/blob/main/middleware/proxy_headers.py)：可信 hostname 不自动解析为 IP，代理允许列表必须按真实 peer 验证。
 - [Nginx upstream](https://nginx.org/en/docs/http/ngx_http_upstream_module.html)：DNS 地址更新依赖适当 resolver/upstream 配置和版本能力；本文允许动态解析或受控网关重载两种经实测的实现。
 - 历史参考实例在 Podman 5.8.1 / Compose provider 5.1.1 下遇到过探针参数、上游重建后的 DNS 缓存及证书库重复初始化问题；这些仅是需复验的案例，不是所有平台的框架缺陷或本模板的已通过证据。新的生成工程须自行验证，并生成自己的 `docs/toolchain.md`；使用本模板不依赖该历史实例的文件。
@@ -1988,4 +2027,4 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 2026-09-08（v1.19）Context7 在本次修订时不可用，按第 1 节约定改查官方文档：[Tailwind CSS 响应式设计](https://tailwindcss.com/docs/responsive-design) 确认 `sm/md/lg/xl/2xl` 默认断点值与 mobile-first 前缀语义在 v4 未变；[WCAG 2.2 Success Criterion 2.5.8 Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) 确认 AA 级最小目标尺寸为 24×24 CSS px，或以等效间距豁免小于该尺寸的目标；[Playwright Emulation](https://playwright.dev/docs/emulation) 与官方 `devices` 注册表确认预设设备只在桌面 WebKit/Chromium 引擎中模拟 viewport、UA、`deviceScaleFactor`、`isMobile` 与 `hasTouch`，不等同物理设备验证。断点取值、表格降级为卡片/堆叠布局和触控目标尺寸门槛均为本模板设计决定，不是框架默认行为；`FE-017`～`FE-019` 在实现工程中通过桌面引擎模拟设备完成，不代表已在真实 iOS/Android 物理设备验证。
 
-本次仅修订生成契约并进行模板展开、Markdown、编号及接口映射静态检查；未据此宣称已有工程通过 API/安全/恢复测试或 Podman 平台验证。版本支持矩阵必须由每个生成工程填写真实证据；第 18 节最早日期段保留为技术依据记录，不推定其所属修订版本。
+本次修订创建契约并执行文档静态检查及上述隔离兼容性 fixture；未据此宣称生成工程通过完整 API/安全/恢复测试或 Podman 平台验证。版本支持矩阵必须由每个生成工程填写真实证据；第 18 节最早日期段保留为技术依据记录，不推定其所属修订版本。
