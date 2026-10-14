@@ -1180,5 +1180,11 @@
       "checks": "Document/static checks and selected official metadata/docs only; no runtime, dependency install, container or physical-device tests.",
       "superseded_by": "v1.23 compatible greenfield baseline; the historical TS7 blocker/candidates no longer describe the selected combination."
     }
-  ]
+  ],
+  "prompt_contract_revision": {
+    "version": "v1.24",
+    "date": "2026-10-14",
+    "scope": "Requirements-only revision: locale/text scale, login terminal snapshot, atomic audit and domain-scope ADR. Components and historical compatibility evidence unchanged.",
+    "validation": "Static document consistency only; no application runtime acceptance claimed."
+  }
 }

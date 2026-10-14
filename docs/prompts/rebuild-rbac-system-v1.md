@@ -1,4 +1,12 @@
-# 可复用 RBAC Phase 1：完整基础系统创建提示词 v1.23
+# 可复用 RBAC Phase 1：完整基础系统创建提示词 v1.24
+
+### v1.24 变更记录（2026-10-14）
+
+- 补齐 zh-CN/en 界面语言、按用户持久化的字号，以及表结构、API、界面和验收契约；沿用固定技术栈，通过 React provider、类型化字典与 Intl 实现，不新增依赖。
+- 登录历史增加终端类型、浏览器/引擎/系统版本、可获得的设备品牌/型号与解析来源，明确缺失、伪造、隐私和快照行为；本人、管理员和 CSV 契约同步。
+- 敏感业务写入与成功审计强制同事务；拒绝/失败事件独立持久化，明确存储故障、数据库最小权限与验收。
+- 增补未来身份/领域档案、权益、租户/分店作用域和模块注册 ADR，保持 Phase 1 单租户范围。
+- 本次仅修订并静态验证创建契约；2026-09-08 版本快照与历史兼容性验证记录保持原样，不代表已实现新功能或运行验收通过。
 
 ### v1.23 变更记录
 
@@ -6,7 +14,7 @@
 - 版本选择以互相兼容为硬约束，在此前提下采用截至 2026-09-08 的最新稳定版本组合；不依赖本机已安装版本，不要求每项都取独立最高版本。
 - TypeScript 选用满足 openapi-typescript 7.13.0 的 ^5.x peer 的最高稳定版 5.9.3；Vitest 5.0.0 未通过严格类型检查，选用验证通过的最高兼容稳定版 4.1.11；共享一个编译器与根 lockfile，移除 TS7 冲突占位和工具隔离候选方案，不再将合理兼容选型当作需要重复确认的例外。
 
-以下旧版本变更记录仅供模板溯源，不是新工程的升级任务或当前版本约束；v1.23 正文及版本表为准。
+以下旧版本变更记录仅供模板溯源，不是新工程的升级任务或当前版本约束；v1.24 正文及版本表为准。
 
 ### v1.22 变更记录
 
@@ -445,6 +453,8 @@ CREATE TABLE user_profiles (
 
 CREATE TABLE user_preferences (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    interface_locale VARCHAR(16) NOT NULL DEFAULT 'zh-CN',
+    text_scale INTEGER NOT NULL DEFAULT 100,
     theme_mode VARCHAR(16) NOT NULL DEFAULT 'system',
     theme_palette VARCHAR(24) NOT NULL DEFAULT 'default',
     contrast_mode VARCHAR(16) NOT NULL DEFAULT 'system',
@@ -455,6 +465,8 @@ CREATE TABLE user_preferences (
     row_version INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT ck_user_preferences_locale CHECK (interface_locale IN ('zh-CN','en')),
+    CONSTRAINT ck_user_preferences_text_scale CHECK (text_scale IN (100,112,125,150)),
     CONSTRAINT ck_user_preferences_theme CHECK (theme_mode IN ('system','light','dark')),
     CONSTRAINT ck_user_preferences_palette CHECK (theme_palette IN ('default','eye_care','sepia','forest')),
     CONSTRAINT ck_user_preferences_contrast CHECK (contrast_mode IN ('system','standard','high')),
@@ -599,6 +611,18 @@ CREATE TABLE login_history (
     ip_address INET,
     user_agent VARCHAR(1000),
     device_summary VARCHAR(255),
+    terminal_type VARCHAR(16) NOT NULL DEFAULT 'unknown',
+    browser_name VARCHAR(80),
+    browser_version VARCHAR(40),
+    engine_name VARCHAR(80),
+    engine_version VARCHAR(40),
+    os_name VARCHAR(80),
+    os_version VARCHAR(40),
+    device_brand VARCHAR(80),
+    device_model VARCHAR(120),
+    terminal_source VARCHAR(24) NOT NULL DEFAULT 'unknown',
+    terminal_parser_version VARCHAR(40) NOT NULL,
+    terminal_parse_status VARCHAR(16) NOT NULL DEFAULT 'unknown',
     request_id UUID NOT NULL,
     session_id UUID REFERENCES refresh_sessions(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -608,6 +632,9 @@ CREATE TABLE login_history (
       'email_verified','password_reset_requested','password_reset_completed',
       'password_changed'
     )),
+    CONSTRAINT ck_login_history_terminal_type CHECK (terminal_type IN ('desktop','mobile','tablet','bot','unknown')),
+    CONSTRAINT ck_login_history_terminal_source CHECK (terminal_source IN ('user_agent','client_hints','combined','unknown')),
+    CONSTRAINT ck_login_history_terminal_parse CHECK (terminal_parse_status IN ('parsed','partial','unknown','invalid')),
     CONSTRAINT ck_login_history_result CHECK (result IN ('success','failure'))
 );
 
@@ -616,6 +643,7 @@ CREATE INDEX ix_login_history_user_created ON login_history (user_id, created_at
 CREATE INDEX ix_login_history_result_created ON login_history (result, created_at DESC);
 CREATE INDEX ix_login_history_request_id ON login_history (request_id);
 CREATE INDEX ix_login_history_ip_created ON login_history (ip_address, created_at DESC);
+CREATE INDEX ix_login_history_terminal_created ON login_history (terminal_type, created_at DESC);
 
 CREATE TABLE action_history (
     id UUID PRIMARY KEY,
@@ -731,7 +759,7 @@ CREATE INDEX ix_restore_runs_backup_id ON restore_runs (backup_id);
 - username 使用 Unicode trim 后的明确规范化策略；登录时查询 `username_normalized`。email 至少 trim + lowercase。把规则写成单元测试。
 - 自助注册创建 `pending_verification` 用户并分配系统 `user` 角色；验证邮箱后进入 `pending_approval`；管理员审批后才进入 `active`。拒绝进入 `rejected`，不能登录。
 - 每个注册、管理员创建、seed 或导入的用户都必须在同一事务创建且仅创建一行 `user_profiles` 和 `user_preferences`；migration 为既有行回填默认值。`users` 只保存登录身份、安全状态和生命周期，`user_profiles` 保存可编辑展示资料，`user_preferences` 保存非安全性 UI/区域偏好，三者不能合并成无约束 JSONB。
-- `time_zone` 必须是 Python `zoneinfo` 可解析的 IANA 时区名称；不得接受任意缩写。`theme_mode/theme_palette/contrast_mode/density/motion_mode/page_size` 必须在服务端校验，且每个字段在 Phase 1 UI 中真实生效；不得预埋没有行为的 language、notification 或 marketing preference。强制安全邮件（改密、邮箱变更、停用、角色/权限变化）不可由偏好关闭。
+- `time_zone` 必须是 Python `zoneinfo` 可解析的 IANA 时区名称；不得接受任意缩写。`interface_locale/text_scale/theme_mode/theme_palette/contrast_mode/density/motion_mode/page_size` 必须在服务端校验，且每个字段在 Phase 1 UI 中真实生效；界面语言和字号必须实际生效；不得预埋没有行为的 notification 或 marketing preference。强制安全邮件（改密、邮箱变更、停用、角色/权限变化）不可由偏好关闭。
 - 一次性 token 至少 256-bit 随机值，数据库只存 SHA-256 hash；同一用户同一 purpose 重新签发时使旧 token 失效。消费 token 必须使用行锁并保持一次性。
 - `password_history` 保留最近 5 个历史 hash；改密、找回密码和管理员重置均禁止复用最近 5 个密码，并按保留策略删除更旧记录。
 - 用户采用不可逆软删除：同一事务内设置 `status='deleted'`、`deleted_at`、递增 `auth_version`、撤销全部会话，并把 `username/username_normalized` 改为 `deleted_<user_uuid_hex>`，把 `email/email_normalized` 改为 `deleted+<user_uuid_hex>@invalid.local`，把 `user_profiles.display_name=NULL`、`user_preferences` 重置为默认值，并删除该用户全部 `email_change_requests`（其中含目标邮箱 PII）。上述 tombstone 值必须满足列长度、格式和唯一约束；原 username/email 不得出现在 action history diff 或日志中。
@@ -1009,6 +1037,10 @@ README 必须注明 Windows PowerShell 的绝对路径写法。archive 固定不
 
 ADR 只定义接口、状态机和约束，不创建 job 表、worker 空壳或未使用依赖。
 
+### 未来领域与作用域扩展 ADR
+
+另交付 `docs/adr/domain-scope-extension.md`：User 是登录身份；Student/Customer/Teacher/Employee 是可重叠领域档案，档案存在不授予权限。课程报名、订阅与订单权益独立于员工职权。定义未来 Membership、tenant/branch RoleAssignment 和 own/enrolled/assigned/branch/tenant/platform 作用域；平台管理员与租户管理员分离，授权必须同时满足权限及资源作用域，后台任务、搜索/计数/导出同样过滤。模块通过不可变 namespaced permission code、幂等注册和迁移接入，新模块不得自动向既有普通角色授予权限；super_admin 的补齐遵守现有不变量。ADR 提供学生他人进度、客户他人订单、员工跨店、租户管理员授予平台权限的拒绝矩阵和未来验收条件。Phase 1 仍单租户，不创建上述领域表、空页面、额外队列或占位 API。
+
 ## 10. 固定 API 契约
 
 统一前缀 `/api/v1`。列表响应：`{items,total,page,size,pages}`。错误响应：
@@ -1045,8 +1077,8 @@ AdminUsernameChange = {new_username: string[3..64], reauth_password: string[1..1
 EmailChangeRequest = {new_email: EmailStr, current_password: string[1..128]}
 AdminEmailChangeRequest = {new_email: EmailStr, reauth_password: string[1..128]}
 EmailChangeConfirm = {token: string}
-UserPreferences  = {theme_mode: "system"|"light"|"dark", theme_palette: "default"|"eye_care"|"sepia"|"forest", contrast_mode: "system"|"standard"|"high", density: "comfortable"|"compact", motion_mode: "system"|"reduced", time_zone: string[1..64], page_size: 20|50|100, row_version: RowVersion}
-UserPreferencesPatch = {theme_mode?, theme_palette?, contrast_mode?, density?, motion_mode?, time_zone?, page_size?, row_version: RowVersion}
+UserPreferences  = {interface_locale: "zh-CN"|"en", text_scale: 100|112|125|150, theme_mode: "system"|"light"|"dark", theme_palette: "default"|"eye_care"|"sepia"|"forest", contrast_mode: "system"|"standard"|"high", density: "comfortable"|"compact", motion_mode: "system"|"reduced", time_zone: string[1..64], page_size: 20|50|100, row_version: RowVersion}
+UserPreferencesPatch = {interface_locale?, text_scale?, theme_mode?, theme_palette?, contrast_mode?, density?, motion_mode?, time_zone?, page_size?, row_version: RowVersion}
 RoleSummary       = {id: UUID, code: RoleCode, name: string[1..120]}
 UserCreate        = {username: Username, email: EmailStr, display_name?: string[1..120]|null, password: NewPassword, role_ids: UUID[]}
 AdminUserProfilePatch = {display_name?: string[1..120]|null, row_version: RowVersion, profile_row_version: RowVersion}
@@ -1085,7 +1117,8 @@ PermissionGroup   = {category: string[1..80], items: Permission[]}
 PermissionCatalog = {groups: PermissionGroup[]}
 Session           = {id: UUID, user_id: UUID, current: boolean, ip_masked: string|null, device_summary: string[1..255]|null, created_at: datetime, last_used_at: datetime|null, expires_at: datetime}
 LoginEventType    = 第 5 节 ck_login_history_event 的完整枚举
-LoginHistoryEntry = {id: UUID, created_at: datetime, event_type: LoginEventType, result: "success"|"failure", device_summary: string[1..255]|null, ip_masked: string|null}
+LoginTerminal     = {terminal_type: "desktop"|"mobile"|"tablet"|"bot"|"unknown", browser_name: string[1..80]|null, browser_version: string[1..40]|null, engine_name: string[1..80]|null, engine_version: string[1..40]|null, os_name: string[1..80]|null, os_version: string[1..40]|null, device_brand: string[1..80]|null, device_model: string[1..120]|null, terminal_source: "user_agent"|"client_hints"|"combined"|"unknown", terminal_parser_version: string[1..40], terminal_parse_status: "parsed"|"partial"|"unknown"|"invalid"}
+LoginHistoryEntry = {id: UUID, created_at: datetime, event_type: LoginEventType, result: "success"|"failure", terminal: LoginTerminal, device_summary: string[1..255]|null, ip_masked: string|null}
 AdminLoginHistoryEntry = LoginHistoryEntry + {user_id: UUID|null, identifier_masked: string[1..320]|null, failure_reason_code: string[1..80]|null, ip_address: string|null, user_agent: string[1..1000]|null, request_id: UUID}
 AuditChange       = {field: string[1..120], before: string|number|boolean|null|string[], after: string|number|boolean|null|string[]}
 ActionHistoryEntry = {id: UUID, actor_user_id: UUID|null, actor_type: "user"|"system"|"worker", action: string[1..120], target_type: string[1..80], target_id: string[1..120]|null, result: "success"|"failure", http_method: string[1..10]|null, path: string[1..500]|null, status_code: integer[100..599]|null, request_id: UUID, ip_address: string|null, user_agent: string[1..1000]|null, changes: AuditChange[], created_at: datetime}
@@ -1102,7 +1135,7 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 ```
 
 - `Session.id` 是 family UUID；列表仅含当前有效 family，每个 family 一条。created_at 为最初登录时间，last_used_at 为 family 最大使用时间，expires_at/IP/设备取当前有效后继；current 相对调用者 JWT sid。本人列表也使用 `Page<Session>`，不能暴露 rotation 行 id、token/CSRF hash。
-- 本人历史只返回 `LoginHistoryEntry`；内部失败原因、完整 IP 和原始 user-agent 只供有权限的管理员响应。IPv4 脱敏为 /24、IPv6 为 /48 网络前缀；设备摘要由解析后的浏览器/OS 名称构成。CSV 列按对应 AdminLoginHistoryEntry/ActionHistoryEntry 顶层字段顺序固定，changes 用脱敏 JSON 字符串编码并防 CSV 公式注入。
+- 本人历史只返回 `LoginHistoryEntry`；内部失败原因、完整 IP 和清理后的 user-agent 只供有权限的管理员响应。IPv4 脱敏为 /24、IPv6 为 /48 网络前缀；终端详情 terminal 对本人可见，未知字段显示“未知”；摘要由已保存的浏览器/OS/终端类型生成。CSV 列按对应 AdminLoginHistoryEntry/ActionHistoryEntry 顶层字段顺序固定，其中 terminal 在其位置按 LoginTerminal 定义顺序展开为 terminal.<field> 列，changes 用脱敏 JSON 字符串编码并防 CSV 公式注入。
 - `changes` 只映射第 12 节允许字段；metadata 不公开。备份 manifest 响应只投影上述字段，签名仍验证 bundle 原始字节；storage_key、encryption_key_id、原始 stderr、连接串及内部对象位置不公开。error_message、报告和 runbook 均须脱敏，runbook 只引用凭据变量，不包含取值。未有报告/runbook 时为 null，ready_for_cutover 必须已有通过报告与非空 runbook。
 - 校验报告检查项不得重复，必需项未执行不能判 passed；备份校验必需 signature/checksum/toc/compatibility，恢复验证另要求 alembic/catalog/rbac/api_smoke/session_invalidation/maintenance_invalidation，pg_amcheck 可选。操作性故障使用错误响应；完成校验但发现不可信/不兼容对象返回 200 的 failed 报告，绝不能据此允许恢复。
 - readiness 在 PostgreSQL 或 RBAC 不变量失败时返回 503 + `ReadyResponse`，正常为 200；仅 Redis 失败时返回 200/degraded 并按已有 fail-closed 规则处理依赖 Redis 的接口。健康响应不公开版本、主机名、连接信息或错误堆栈。
@@ -1204,6 +1237,7 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 | `REGISTRATION_STATUS_EXPIRED` | 410 | 注册状态 token 无效或过期（含 decoy） |
 | `ONE_TIME_TOKEN_INVALID` | 410 | 一次性 token 无效、过期、已消费，或确认邮箱变更无法完成；统一文案，不暴露邮箱占用原因 |
 | `PAYLOAD_TOO_LARGE` | 413 | 请求体、导入文件超过配置大小上限 |
+| `AUDIT_STORAGE_UNAVAILABLE` | 503 | 必需的安全审计无法持久化，敏感操作未提交 |
 | `VALIDATION_ERROR` | 422 | 字段/版本缺失、长度/格式/枚举/null 错误、未知字段/sort/filter、确认短语不匹配或导出超过行数限制 |
 | `PASSWORD_POLICY_VIOLATION` | 422 | 新密码未通过统一策略；不返回历史密码或泄露库原始数据 |
 | `BACKUP_INVALID` | 422 | 导入或恢复 preflight 的格式、签名、checksum、TOC、信任或兼容性检查失败；无目标库副作用 |
@@ -1230,9 +1264,9 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 
 - `/app`：账户概览，显示姓名、用户名、角色摘要、最近登录和安全状态。
 - `/app/profile`：展示资料；username/email 变更使用独立重新认证与邮件确认流程，不混入普通保存按钮。
-- `/app/preferences`：外观（主题、对比度、密度、动态效果）与区域（IANA 时区、默认分页大小），每项都有即时预览、保存状态和恢复默认值。
+- `/app/preferences`：界面语言（简体中文/English）、外观（主题、字号、对比度、密度、动态效果）与区域（IANA 时区、默认分页大小），每项都有即时预览、保存状态和恢复默认值。
 - `/app/security`：修改密码、当前会话、其他会话、退出全部设备以及近期安全动作。
-- `/app/login-history`：本人登录历史。
+- `/app/login-history`：本人登录历史，列表显示时间、事件/结果、终端类型、浏览器/版本、系统/版本和脱敏 IP；行内展开或窄屏详情面板展示 LoginTerminal 全部字段、来源与未知状态，不泄露管理员字段。
 
 使用 `AccountLayout`。导航只包含“账户概览”“个人资料”“偏好设置”“安全与会话”“登录历史”。个人菜单包含亮度模式和当前 palette 的快捷切换与退出，快捷切换与 Preferences 页使用同一状态源。普通用户不看到任何管理员入口、ADMIN 标记或管理数据。
 
@@ -1244,12 +1278,19 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `/admin/roles` 与 `/admin/roles/:id`。
 - `/admin/permissions`。
 - `/admin/sessions`。
-- `/admin/login-history`。
+- `/admin/login-history`：相同终端详情，按权限另显示完整 IP、清理后的 user-agent、失败原因和 request id；支持 terminal_type/browser_name/os_name 精确筛选（有界参数）及原有日期/事件筛选；列表与 CSV 使用同一授权和过滤。
 - `/admin/action-history`。
 - `/admin/backups`：创建、下载、导入、校验、保留期和删除备份。
 - `/admin/restores` 与 `/admin/restores/:id`：高危恢复向导、实时状态、验证报告和 cutover runbook。
 
 `AdminLayout` 在 light/dark/high-contrast 各模式下均使用与账户区不同的 Slate/Navy 管理侧栏，固定显示盾牌图标、`Administrator Console` 与琥珀色 `ADMIN` 徽标，不能因切换主题失去管理员身份提示。用户详情把 Account governance、Profile、Roles、Security、Activity 分区展示；管理员不能编辑 Preferences。顶栏提供“返回账户区”。只有拥有 `admin.access` 才能进入管理根路由；子路由继续检查细粒度权限。
+
+### 界面语言、字号与 Preferences 执行契约
+
+- Phase 1 默认 zh-CN，支持 en；使用统一 React I18nProvider、按 auth/account/admin/common/errors 命名空间组织的类型化字典和稳定消息键。沿用当前依赖，以 Intl 实现数值、时区日期和复数选择，不临时增加未登记 i18n 包。按钮、表头、表单校验、toast、确认框、空/错误状态和 accessible name 均不得散落硬编码文案。CI 检查两语言键集合、插值参数一致、缺失键与原始键泄漏；安全回退到 zh-CN 并上报缺失键。
+- 语言与学习内容语言独立，不自动翻译用户数据、角色自定义名称或权限码。后端稳定 error code + 参数由前端翻译；固定公共 API 英文 message 仅作兼容字段，不直接作为 UI 文案。设置 document lang，采用逻辑 CSS 属性；未来 RTL 只作为扩展方向，未验收不得宣称支持。
+- 已登录以数据库 interface_locale 为权威，优先于匿名选择；匿名语言顺序为显式 namespaced anonymous-language、受支持浏览器语言、zh-CN。匿名值仅允许 zh-CN/en；登录/退出按主题同样规则清理和 reconcile，不能串号。语言切换调用本人 Preferences API，失败/409 回滚，支持跨设备同步。新增语言必须同步服务端 allowlist、OpenAPI、字典与验收，不接受任意 locale 字符串。
+- text_scale 为 100/112/125/150 百分比，通过统一字体 token 实际作用于三个 layout、Dialog/portal、表格与表单，不用 CSS transform 或整体页面 zoom。设置页提供预览、保存、恢复默认。保持浏览器缩放可用，各档叠加 200% 文本缩放和长英文仍无内容/操作丢失；compact 不能缩小最低触控区域。匿名字号不持久化，账户字号随登录同步并在退出清除。
 
 ### Theme 与 Preferences 执行契约
 
@@ -1296,12 +1337,23 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - 普通用户看到自己的时间、事件、结果、设备摘要和脱敏 IP；管理员可按用户、事件、结果、原因、IP、日期筛选。
 - 绝不记录 attempted password、完整 token、Cookie 或认证请求体。
 
+### 登录终端采集与展示契约
+
+- 登录成功的 login_history insert 与 session/last_login_at 写入同事务，持久化失败不签发 token/Cookie，返回 503 AUDIT_STORAGE_UNAVAILABLE；登录失败在独立事务保存，存储故障按 Action history 的失败审计策略处理。
+- 每个登录成功/失败事件（包括未知用户名）在后端从当前请求生成不可变终端快照；其他认证事件同样采集当前请求，不把旧会话设备冒充本次终端。使用集中 `terminal_parser` adapter，parser 版本标识随记录保存，历史记录不因后续 parser 升级自动重算。Phase 1 以有界、测试覆盖的 UA/Client Hints 规则实现，不新增快照外的解析依赖；规则无法识别时返回 unknown/null，禁止猜测版本或设备型号。
+- 解析当前 User-Agent 及浏览器自发提供的低熵 Sec-CH-UA/Sec-CH-UA-Mobile/Sec-CH-UA-Platform；任一 header 解析前最多 1000 字符、聚合上限 4 KiB，超限/异常跳过解析并标记 invalid，不影响正常认证和失败记录。先移除控制字符并脱敏自定义 UA 中邮箱、token/URL 等敏感片段，保存清理后的有界 user_agent。UA/Client Hints 是可伪造客户端报告，terminal_source 表示来源而非可信认证；与授权、MFA、账户锁定或“可信设备”无绑定。
+- terminal_type 区分 desktop/mobile/tablet/bot/unknown；保存可获得的浏览器及引擎名称/版本、系统名称/版本、品牌/型号。Safari 等缺失 Client Hints、UA reduction、桌面模式、WebView 和冲突 header 可导致 partial/unknown；品牌/型号只从当前请求实际提供的信息提取，不推测电脑型号、Android 精确型号或 iPhone 型号。固定优先级：可识别且内部一致的 Client Hints 优先对应字段，其余由 UA 补齐；冲突字段置 null/unknown 且状态 partial，无法解析为 unknown，非法输入为 invalid。仅全部核心字段（类型、浏览器名称/版本、OS 名称/版本）可识别且无冲突时 parsed，可选型号未知不导致失败。
+- 不采集 MAC、IMEI、设备序列号、canvas/font 指纹、屏幕/插件清单、精确地理位置；不主动请求高熵 Client Hints，也不增加 LoginRequest 任意设备 metadata。IP 来自第 14 节受信代理链；公网伪造 X-Forwarded-For 不可覆盖实际来源。完整 IP 与清理后的 UA 仅持久存于受控安全历史、仅按管理员权限读取；运行日志仍使用现有脱敏规则。保留期沿用安全历史的明确配置，并覆盖数据库备份权限。
+- 本人仅访问本人 LoginHistoryEntry；管理读取/导出分别执行 read/export 权限。日期筛选使用 UTC、展示使用用户 locale/time_zone；browser/OS/型号是数据而非翻译键，类型/来源/未知提示需翻译。清理后的 UA 始终作为纯文本转义显示；CSV 全部终端列同样防公式注入，不执行 HTML 或把设备字段变成查询/文件路径。
+
 ### Action history
 
 - 记录用户创建、Profile 修改、username/email 身份变更、停用/软删除、密码重置、角色分配、角色变更、权限分配、会话撤销、导出、备份创建/下载/导入/删除、恢复请求/验证/失败/完成和 cutover；主题等非安全个人偏好按第 5 节规则不写入 action history。
 - `actor_type=system/worker` 时不得伪造 actor user。
-- 业务事务成功提交后记录 success；若需要与业务变更原子一致，audit insert 与业务写入同一事务。失败记录必须明确 failure，不能因 rollback 留下 success。
-- `changes` 只包含 allowlist 字段 diff；角色/权限只记录 ID/code 集合变化，不保存整个 ORM 对象。
+- 角色/权限/账户/会话等敏感写入的 success audit insert 必须与业务写入同一 PostgreSQL 事务，worker 状态转换同理；审计 insert 失败则回滚业务并返回稳定 503 `AUDIT_STORAGE_UNAVAILABLE`，不能提交后 best-effort 补记 success。Phase 1 使用直接数据库写入，不新增 outbox/通用队列。
+- 拒绝和已回滚失败事件使用回滚后的独立短事务写 failure，包含 actor/target/action/request_id/稳定 reason（置于允许的 changes 字段 failure_reason_code，before=null）；不得保存原始输入或假称执行成功。权限拒绝需在授权层集中记录，不对普通成功 GET/health/页面访问写 action history。失败审计不可用时输出脱敏告警并返回 503 `AUDIT_STORAGE_UNAVAILABLE`，保持原操作拒绝且不启动业务写入；告警不能计作持久审计成功。
+- migration owner 与应用数据库账户分离；应用账户对 login_history/action_history 仅 SELECT/INSERT，无 UPDATE/DELETE/TRUNCATE，保留期清理仅由受控 maintenance 身份执行并审计。修正外键 SET NULL/删除行为与最小权限的冲突：Phase 1 用户软删除，不硬删除 users 或被历史引用的 refresh_sessions；会话清理仅删除未被历史引用的行。备份恢复由独立受限 maintenance 身份执行，不向 API 账户开放 schema ownership。
+- `changes` 只包含 allowlist 字段 diff（失败记录额外允许 failure_reason_code）；角色/权限只记录 ID/code 集合变化，不保存整个 ORM 对象。
 - access log 通过 request id 与 action history 关联，但不复制完整日志内容。
 
 ## 13. 明确测试用例
@@ -1371,6 +1423,8 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `PREF-003` Given page_size/time_zone/density/motion/contrast/theme mode/theme palette 任一值改变，Then 对应列表分页、日期显示、布局、动画或色彩真实改变；不存在已保存但 UI 未使用的 Phase 1 preference。
 - `PREF-004` Given 任意 mode × palette × contrast 组合，Then 完整 token 均存在、服务端与客户端枚举一致、文字/控件/焦点满足 WCAG 2.2 AA；非法或未来未知 palette 返回 422 而不是部分应用。
 
+- `PREF-005` interface_locale/text_scale 通过数据库/API 枚举和版本校验，跨刷新/设备生效，409/网络失败回滚；管理员与他人不能修改，退出/切换账号不串号。
+
 ### RBAC
 
 - `RBAC-001` Given user 拥有两个角色，Then effective permissions 是去重并集。
@@ -1402,8 +1456,14 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `HIS-001` 每种登录事件字段符合表约束，未知用户失败登录允许 user_id NULL。
 - `HIS-002` 关键管理动作产生一条 action history，actor/target/result/request_id 正确。
 - `HIS-003` 事务失败不产生 success action；敏感字段不出现在 changes/metadata。
-- `HIS-004` 普通 GET、health 和页面访问不生成 action history。
+- `HIS-004` 普通成功 GET、health 和页面访问不生成 action history；受保护操作的权限拒绝按第 12 节产生 failure。
 - `HIS-005` 普通用户只能查本人 login history；导出接口需要独立 export 权限。
+
+- `HIS-006` 桌面 Chrome/Edge/Firefox、iOS Safari、Android Chrome、tablet/WebView/bot 样本按实际可获得 UA/低熵 Client Hints 生成终端快照；浏览器/引擎/系统版本与来源正确，型号缺失保持 null，UA reduction 不伪造详细版本；未知用户名失败同样记录。
+- `HIS-007` 缺失/冲突/超长/非法 Client Hints 与含控制字符、HTML、邮箱/token/CSV 公式的 UA，不影响认证，解析状态符合规则；日志无秘密、页面转义、CSV 防注入；伪造终端/IP 不改变权限或受信客户端 IP。
+- `HIS-008` 本人、他人、管理员 read/export 各边界正确；终端筛选、CSV 展开顺序和 locale/time_zone 展示正确，升级 parser 后旧快照保持。
+- `HIS-009` 注入成功审计 insert 失败，Then 敏感业务状态及版本全部回滚、503 AUDIT_STORAGE_UNAVAILABLE；业务回滚或授权拒绝仍独立持久化 failure。失败审计也不可用时仍无业务变更、503 和脱敏告警，不宣称审计成功。
+- `HIS-010` 以应用数据库账户尝试 UPDATE/DELETE/TRUNCATE 安全历史均被数据库拒绝；正常会话清理、软删除、受控保留清理和备份恢复不破坏权限或外键。
 
 ### 运行日志与前端遥测
 
@@ -1481,6 +1541,10 @@ ReadyResponse     = {status: "ok"|"degraded"|"unavailable", checks: {postgres: "
 - `FE-018` Given 各列表在 md 以下卡片布局及 md 以上表格布局，Then 字段入口、筛选/排序/分页/权限操作完整；独立控件点击区至少 44×44 CSS px（含 compact），其他目标逐项核验 SC 2.5.8；同时覆盖角色权限矩阵与长文本。
 - `FE-019` Given Playwright 使用官方 `devices` 注册表中的手机（如 `iPhone 14`）、平板（如 `iPad Pro 11`）与 Android（如 `Pixel 7`）设备描述运行登录、账户概览与管理员列表关键路径，Then 触控点击/tap 交互、viewport meta 缩放限制与断点布局均通过；横竖屏切换不产生白屏或状态丢失。iPhone/iPad 项目显式使用 WebKit，Pixel 使用 Chromium；仅改变 viewport 不算完成设备模拟，模拟不计作真机结果。
 - `FE-020` Given 第 11 节支持矩阵的 iOS/iPadOS Safari 与 Android Chrome 真机，Then 登录、资料编辑、管理员列表/确认操作、软键盘、安全区域、横竖屏及 200% 文本缩放均可用；按设备记录证据，未执行不得用 FE-019 替代。
+- `FE-021` zh-CN/en 覆盖全部公共/账户/管理流程、校验/错误/确认/accessible name；缺失键安全回退、插值/复数正确、长英文和日期/数字格式正确，语言切换不翻译用户内容或权限码。
+- `FE-022` 四档字号作用于所有 layout/portal/表格/表单；窄屏、长翻译、compact 和 200% 文本缩放下操作可达，无截断或横向溢出，保存/回滚/恢复默认正确。
+- `FE-023` 本人和管理登录历史在桌面与手机可展开终端全部字段，未知/来源明确，敏感字段按权限隔离，恶意 UA/型号不执行 HTML；筛选和 CSV 与接口一致。
+- `CFG-009` 领域作用域 ADR 包含身份/档案/权益边界、跨用户/分店/租户拒绝矩阵及模块注册规则；Phase 1 未生成领域空表/页面/API。
 - `CFG-006` Given 按模板创建全新工程，Then 运行时、工具、直接依赖与服务软件版本落实 2026-09-08 最新兼容稳定快照；manifest 精确、lockfile 与之匹配，TypeScript 统一 5.9.3 并满足生成器 peer；较新但不兼容候选的排除证据明确，生成日期和本机安装状态不决定版本。
 - `CFG-007` Given 固定兼容快照的前端工具链，Then 干净安装与根 lockfile 重建无 peer 绕过或额外编译器；生成的 OpenAPI 类型通过同一 TypeScript 5.9.3 typecheck/build，Router 8 入口与 ESM 配置可运行；生成物重现一致，失败或未执行项不得计通过。
 - `CFG-008` Given 仅有模板输入与空目标目录/空项目数据库，Then 可创建新工程并完成 baseline/seed；不要求提供旧项目源码或数据、不连接同机其他项目数据库、不生成旧系统升级/权限映射任务；已存在的无关资源保持不变。
@@ -1936,6 +2000,8 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 ## 17. 完成定义
 
+- zh-CN/en、四档个人字号、详细登录终端快照、审计故障/数据库最小权限与领域扩展 ADR 已完整交付；`PREF-005`、`HIS-006`～`HIS-010`、`FE-021`～`FE-023`、`CFG-009` 实际验收通过，未执行不得计为完成。
+
 必须提交 `docs/implementation-status.md` 与机器可读的 `docs/verification-result.json`。按需求/测试编号分别记录实现状态（未实现/部分实现/已实现）和验证状态（未执行/通过/失败/受环境限制），附命令、执行日期、源码 revision 或 dirty 状态/内容 fingerprint、平台与工具版本、脱敏结果及 artifact 路径。统计须给出适用总数、执行/通过/失败/跳过数量，不能用少量通过用例替代完整矩阵；代码或部署配置变化后标记受影响证据待复验。
 
 开发工程可运行、功能矩阵完成、生产部署验证是不同里程碑。平台或凭据不足时记录缺少的前提，不得把静态配置验证写成真实部署通过；首次交付执行一次归档恢复演练，后续季度演练记录到期计划与实际结果，不要求等待一个季度，也不能声称未来演练已通过。提示词修订版本与新工程实现/验收状态分别记录，更新模板不代表任何生成工程已经通过验收。
@@ -1982,10 +2048,11 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 
 ## 18. 本次文档修订的技术依据
 
+2026-10-14（v1.24）：此次为需求/创建契约补齐，不更换框架、版本或新增依赖；终端字段可获得性需生成工程按第 1 节核对官方浏览器文档并用真实请求验收。本次验证范围为 UTF-8/JSON、模板实例展开、围栏、版本表和新增验收编号静态一致性；不宣称运行新功能、联网重新核实历史版本或修改本机部署。
+
 2026-09-08（v1.23）：用户明确本目录用于创建新工程，版本标准为互相兼容前提下的最新稳定版。本轮远程 Context7 对 `/openapi-ts/openapi-typescript` 完成 resolve-library-id/query-docs，核对单一 TypeScript 工具链、ESM 配置、生成与 typecheck 用法；[生成器 7.13.0 元数据](https://registry.npmjs.org/openapi-typescript/7.13.0)声明 ^5.x；[TypeScript 官方发布清单](https://registry.npmjs.org/typescript)中满足该约束的最高非预发布版本为 [5.9.3](https://registry.npmjs.org/typescript/5.9.3)。选型无需额外版本例外确认，v1.21/v1.22 的 TS7 阻塞和隔离候选已由兼容组合替代。 同时查询 [Vitest 发布元数据](https://registry.npmjs.org/vitest)：5.0.0 的类型声明未通过临时 fixture 的完整 typecheck，4.1.11 是随后最高稳定版本且通过复验，因此选定 [4.1.11](https://registry.npmjs.org/vitest/4.1.11)。验证使用按官方哈希校验下载的 Node 26.8.1/npm 12.0.2/uv 0.12.10，不按系统已安装工具选型。验证范围与结果记录在版本依据 JSON 的 compatibility_validation，不推定未实测服务通过。
 
-以下保留模板历史审计记录；它们不是当前新工程的选型、旧项目升级步骤或待解决事项。当前要求以 v1.23 正文与兼容快照为准。
-
+以下保留模板历史审计记录；它们不是当前新工程的选型、旧项目升级步骤或待解决事项。当前要求以 v1.24 正文与兼容快照为准。
 
 2026-09-08（v1.22 审计复核）：本轮通过远程 `https://mcp.context7.com/mcp` 成功执行四个库的 `resolve-library-id` 与 `query-docs`：`/remix-run/react-router`、`/podman-container-tools/podman`、`/websites/postgresql_18`、`/openapi-ts/openapi-typescript`。远程 MCP 成功与某客户端没有注册 Context7 工具可以同时成立；资源列表也不是工具列表。Context7 片段可能跨版本，以下关键结论另以官方来源核对：
 
@@ -1994,9 +2061,7 @@ podman compose --env-file .env -f deploy/compose.yml -f deploy/compose.dev.yml e
 - [Podman 5.0](https://github.com/podman-container-tools/podman/releases/tag/v5.0.0)与 [6.0](https://github.com/podman-container-tools/podman/releases/tag/v6.0.0)发布记录区分默认值变化、移除旧支持与宿主平台限制；[Vite 8 公告](https://vite.dev/blog/announcing-vite8)的架构变更发布于 2026-03-12，不是本次快照当天的新变化。
 - [TypeScript 7 公告](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)说明旧编译器 API 边界；[openapi-typescript 7.13.0 元数据](https://registry.npmjs.org/openapi-typescript/7.13.0)仍声明 TypeScript ^5.x；[npm peerDependencies](https://docs.npmjs.com/cli/v12/configuring-npm/package-json/#peerdependencies)不能替代具体依赖树实验。第 2 节隔离方案未安装/执行，不宣称冲突已解决。
 
-
 2026-09-08（v1.21）：远程 Context7 重试成功。通过 `resolve-library-id` 后对 `/websites/tailwindcss`、`/microsoft/playwright`、`/vitejs/vite` 执行 `query-docs`，取得响应式前缀语义、设备项目/镜像配置与 Vite Node engines 的官方文档片段。Context7 索引返回的部分版本较旧，因此精确版本以第 2 节每行官方发布元数据为准，未把索引版本当最新版本。本次同时读取 npm latest、PyPI JSON、官方 GitHub releases、Node 发布索引及 Python/PostgreSQL/Nginx 官网；发布版本与日期已内嵌快照。Context7 示例中的关闭 HTTPS 校验不采纳，继续执行本契约受信 CA 要求。只验证文档/发布元数据及部分声明约束，未运行依赖安装、应用测试、容器或真机；openapi-typescript/TypeScript 冲突仍显式未解决。以下 v1.20 的失败是前次尝试历史，本次已连通。
-
 
 2026-09-08（v1.20）：本次未暴露 Context7 工具；尝试向 `https://mcp.context7.com/mcp` 发出 resolve-library-id 请求连接失败，未取得 Context7 内容。依第 1 节回退并核对 [Tailwind 响应式规则](https://tailwindcss.com/docs/responsive-design)、[浏览器兼容要求](https://tailwindcss.com/docs/compatibility)、[WCAG 目标尺寸最低要求](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)、[Playwright 设备模拟](https://playwright.dev/docs/emulation)、[MDN 动态视口单位](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/length)、[安全区域 env()](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/env)、[Node.js 发布渠道](https://nodejs.org/en/about/previous-releases)及 [PostgreSQL 版本策略](https://www.postgresql.org/support/versioning/)。44px 目标、平板布局与真机验收是项目决定。此次更新的是版本选择规则，未生成完整依赖精确版本清单，也未宣称所有库最新版本已核验；历史依据中的旧版本仅保留溯源，不再约束新工程选型。
 
