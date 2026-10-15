@@ -1,0 +1,13 @@
+{
+  "version": "0.4.0",
+  "structural_checks": "passed",
+  "metadata_preservation": "passed; only version and longDescription changed",
+  "references": 6,
+  "archive_files": 9,
+  "deletions": [
+    "skills/build-rbac/references/frontend-design.md",
+    "skills/build-rbac/references/application-foundation.md"
+  ],
+  "live_behavior_evaluations": "not run: no host evaluation harness configured",
+  "archive": "C:\\Work\\dev\\geniushub\\artifacts\\rbac-builder-0.4.0.zip"
+}

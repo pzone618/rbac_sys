@@ -1,0 +1,34 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "email": "leon.i.long.yu@gmail.com",
+    "name": "Leon Yu"
+  },
+  "description": "Design website interfaces, compare visual directions, build interactive prototypes, and review implementation with optional Figma references.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [],
+        "category": "Productivity",
+        "defaultPrompt": [
+          "为我的网站设计三种有明显差异的视觉方向，并制作可比较的页面原型。",
+          "根据这个 Figma 页面实现响应式界面，复用项目已有组件。",
+          "检查当前页面的视觉层级、响应式、可访问性和交互状态，并修复问题。"
+        ],
+        "developerName": "Leon Yu",
+        "displayName": "Website Design Studio",
+        "longDescription": "从需求到视觉方向、可点击原型和界面审查；复用项目设计系统，支持可选 Figma 设计稿与 Context7 文档核对。Figma、Context7 和浏览器能力由宿主提供，未捆绑外部服务。",
+        "shortDescription": "网站界面设计、原型与审查"
+      }
+    }
+  },
+  "keywords": [
+    "website",
+    "ui",
+    "design-system",
+    "prototype",
+    "figma"
+  ],
+  "name": "website-design-studio",
+  "version": "0.2.0"
+}
