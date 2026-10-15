@@ -93,3 +93,6 @@ Desktop.ini
 
 # Keep manifests, lockfiles, migrations, public fixtures and verification
 # documents trackable; do not add blanket *.sql, *.json, *.png or *.zip rules.
+
+# Machine-specific Claude permissions and command history
+/.claude/settings.local.json

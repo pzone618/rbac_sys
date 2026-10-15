@@ -1,0 +1,24 @@
+{
+  "interface": {
+    "category": "Productivity",
+    "defaultPrompt": [
+      "帮我使用 FastAPI 和 React 创建 RBAC 系统。",
+      "检查我的项目中的权限漏洞，并实现修复和测试。",
+      "为多租户应用设计角色、权限矩阵及安全的授权流程。"
+    ],
+    "developerName": "Leon Yu",
+    "displayName": "RBAC Builder",
+    "longDescription": "构建可演进的用户与授权基础：RBAC、租户与数据范围、Profile 字段治理、成员生命周期、授权审计和安全升级。支持现有项目集成、边界测试与使用中的主动缺口检查。",
+    "shortDescription": "设计、实现和审查 RBAC 权限系统",
+    "capabilities": []
+  },
+  "name": "rbac-builder",
+  "version": "0.4.0",
+  "description": "Design, implement, test, and review role-based access control in new and existing software projects.",
+  "author": {
+    "name": "Leon Yu",
+    "email": "leon.i.long.yu@gmail.com"
+  },
+  "keywords": [],
+  "skills": "./skills"
+}
