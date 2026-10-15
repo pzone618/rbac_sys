@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTS Studio 朗读示例</title>
+<style>body{font:18px system-ui;max-width:48rem;margin:3rem auto;padding:1rem}textarea{display:block;width:100%;min-height:10rem;margin:1rem 0}button,select{font:inherit;margin:.25rem;padding:.5rem}#state{min-height:2rem}</style>
+<h1>指定文本朗读</h1>
+<label for="text">朗读文本</label>
+<textarea id="text">欢迎使用语音朗读。Hello, welcome to TTS Studio. 今天是2026年10月15日。</textarea>
+<label for="voice">本机语音</label><select id="voice"></select>
+<div><button id="play">朗读</button><button id="pause">暂停</button><button id="resume">继续</button><button id="stop">停止</button></div>
+<p id="state" role="status" aria-live="polite"></p>
+<p>只显示本机语音。实际离线能力需在目标设备断网验证。</p>
+<script type="module">
+import { createBrowserTts } from './browser-tts.mjs';
+const state = document.querySelector('#state');
+try {
+  const reader = createBrowserTts({ onState: value => { state.textContent = value; } });
+  const select = document.querySelector('#voice');
+  const voices = await reader.listVoices();
+  for (const voice of voices) select.add(new Option(`${voice.name} (${voice.lang})`, voice.voiceURI));
+  if (!voices.length) state.textContent = '没有可用的本机语音，请安装系统语音包。';
+  document.querySelector('#play').onclick = () => reader.speak(document.querySelector('#text').value, { voiceURI: select.value }).catch(error => { state.textContent = error.message; });
+  for (const action of ['pause', 'resume', 'stop']) document.querySelector(`#${action}`).onclick = reader[action];
+  window.addEventListener('pagehide', reader.dispose);
+} catch (error) { state.textContent = error.message; }
+</script>
+</html>

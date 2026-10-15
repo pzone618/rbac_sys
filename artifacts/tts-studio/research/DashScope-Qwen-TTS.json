@@ -1,0 +1,81 @@
+{
+  "name": "DashScope Qwen TTS",
+  "query": "Qwen TTS speech synthesis API streaming languages",
+  "search": {
+    "results": [
+      {
+        "id": "/qwenlm/qwen3-tts",
+        "title": "Qwen3-TTS",
+        "description": "Qwen3-TTS is a series of powerful speech generation models developed by Qwen, offering comprehensive support for voice cloning, voice design, ultra-high-quality human-like speech generation, and natural language-based voice control across 10 major languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-18T07:46:19.446Z",
+        "state": "finalized",
+        "totalTokens": 100709,
+        "totalSnippets": 525,
+        "stars": 3324,
+        "trustScore": 9.1,
+        "benchmarkScore": 89.53,
+        "versions": []
+      },
+      {
+        "id": "/kritsanan1/qwen3-tts",
+        "title": "Qwen3-TTS",
+        "description": "Qwen3-TTS is a series of powerful speech generation capabilities developed by Qwen, offering comprehensive support for voice cloning, voice design, ultra-high-quality human-like speech generation, and natural language-based voice control across 10 major languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-09T12:08:07.377Z",
+        "state": "finalized",
+        "totalTokens": 37938,
+        "totalSnippets": 274,
+        "stars": 0,
+        "trustScore": 5.8,
+        "benchmarkScore": 85.25,
+        "versions": []
+      },
+      {
+        "id": "/dashscope/dashscope-sdk-python",
+        "title": "DashScope Python SDK",
+        "description": "The DashScope Python SDK provides a Python interface for interacting with DashScope's AI models, enabling developers to easily integrate powerful language generation capabilities into their applications.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-19T19:54:49.433Z",
+        "state": "finalized",
+        "totalTokens": 125117,
+        "totalSnippets": 720,
+        "stars": 12,
+        "trustScore": 4.6,
+        "benchmarkScore": 76.75,
+        "versions": []
+      },
+      {
+        "id": "/dashscope/dashscope-sdk-java",
+        "title": "DashScope SDK Java",
+        "description": "DashScope SDK Java is a software development kit for integrating DashScope AI models into Java applications, providing functionalities for conversational AI with support for both streaming and non-streaming interactions.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-14T07:21:37.532Z",
+        "state": "finalized",
+        "totalTokens": 124432,
+        "totalSnippets": 676,
+        "stars": 33,
+        "trustScore": 4.6,
+        "benchmarkScore": 68.45,
+        "versions": []
+      },
+      {
+        "id": "/eswulei/dashscope-go",
+        "title": "DashScope Go",
+        "description": "An unofficial Go SDK wrapper for Alibaba Cloud's DashScope API, providing support for Qwen large language models, image generation, speech recognition, and multimodal AI capabilities.",
+        "branch": "main",
+        "lastUpdateDate": "2026-08-21T22:00:36.445Z",
+        "state": "finalized",
+        "totalTokens": 2573,
+        "totalSnippets": 12,
+        "stars": 1,
+        "trustScore": 6.2,
+        "benchmarkScore": 75,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/qwenlm/qwen3-tts",
+  "context": "### Qwen3TTSModel.get_supported_languages\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/_autodocs/api-reference/qwen3-tts-model.md\n\nReturns the list of supported languages for synthesis.\n\n```APIDOC\n## Qwen3TTSModel.get_supported_languages\n\n### Description\nReturns the list of supported languages for synthesis.\n\n### Method\nMethod\n\n### Signature\n```python\ndef get_supported_languages(self):\n```\n\n### Parameters\nNone.\n\n### Return Type\nList of supported languages (type not specified in source).\n```\n\n--------------------------------\n\n### get_supported_speakers / get_supported_languages\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/_autodocs/api-reference/qwen3-tts-for-conditional-generation.md\n\nReturn the supported speaker IDs and language codes. These methods provide the available speakers and languages for the TTS model.\n\n```APIDOC\n## get_supported_speakers / get_supported_languages\n\n### Description\nReturn the `supported_speakers` keys view (`spk_id` keys; e.g. `\"vivian\", \"serena\", ...`) and the `supported_languages` list (`[\"auto\", ...]` without dialect keys; dialects are reachable via the auto/speaker-dialect path).\n\n### Methods\n- `get_supported_speakers(self)`\n- `get_supported_languages(self)`\n\n### Returns\n- `get_supported_speakers`: A view of the supported speaker keys.\n- `get_supported_languages`: A list of supported language codes.\n\n### Example\n```python\nprint(list(model.get_supported_speakers()), model.get_supported_languages())\n```\n```\n\n--------------------------------\n\n### generate_custom_voice\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/_autodocs/api-reference/qwen3-tts-model.md\n\nSynthesizes speech from text using a predefined speaker and language. Supports batch inputs and optional instructions, with non-streaming mode by default.\n\n```APIDOC\n## generate_custom_voice\n\n### Description\nSynthesizes speech from text using a predefined speaker and language. Supports batch inputs and optional instructions, with non-streaming mode by default.\n\n### Method\nPython method\n\n### Endpoint\n`model.generate_custom_voice(text, speaker, language=None, instruct=None, non_streaming_mode=True, **kwargs)`\n\n### Parameters\n#### Path Parameters\nNone\n\n#### Query Parameters\nNone\n\n#### Request Body\n- **text** (str or List[str]) - Required - Text(s) to synthesize.\n- **speaker** (str or List[str]) - Required - Predefined speaker name(s), validated case-insensitively against `model.get_supported_speakers()` (e.g. `Vivian`, `Ryan`, `Dylan`, ...).\n- **language** (str or List[str]) - Optional - Language(s); `\"Auto\"` when omitted.\n- **instruct** (Optional[str] or List[str]) - Optional - Optional instruction(s); `None`/empty is treated as no instruction.\n- **non_streaming_mode** (bool) - Optional - See `generate_voice_clone`.\n- **kwargs** (Any) - Optional - Generation args (same merge rule).\n\n### Request Example\n```python\nwavs, sr = model.generate_custom_voice(\n    text=\"其实我真的有发现，我是一个特别善于观察别人情绪的人。\",\n    language=\"Chinese\",\n    speaker=\"Vivian\",\n    instruct=\"用特别愤怒的语气说\",\n)\n```\n\n### Response\n#### Success Response (200)\n- **wavs** (List[np.ndarray]) - List of generated audio waveforms.\n- **sample_rate** (int) - Sample rate of the audio.\n\n#### Response Example\n```python\nwavs, sr = model.generate_custom_voice(...)\n```\n\n### Error Handling\n- **ValueError** - `tts_model_type != \"custom_voice\"`; batch-size mismatch; unsupported language or speaker (`Unsupported languages: [...]`, `Unsupported speakers: [...]`).\n- **NotImplementedError** - Unknown speaker/language ids (message `f\"Speaker {speaker} not implemented\"` / `f\"Language {language} not implemented\"`).\n\n### Behavior Notes\n- When `self.model.tts_model_size in \"0b6\"` (i.e. the 0.6B model size string contains `\"0b6\"`), `instruct` is forcibly set to `None` — the 0.6B CustomVoice models do not support instruction control.\n- 0.6B or not, when the current model is a dialect speaker with `language` in `[\"chinese\", \"auto\"]` and the speaker is flagged `spk_is_dialect`, the model switches the language id to the dialect (`generate()` side effect inside `Qwen3TTSForConditionalGeneration.generate`).\n- Validates languages and speakers before generation; instructs become `\"<|im_start|>user\\n{instruct}<|im_end|>\\n\"` when non-empty.\n```\n\n--------------------------------\n\n### Streaming generation caveat (voice clone)\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/qwen_tts/inference/qwen3_tts_model.py\n\nThe non_streaming_mode docstring explicitly states that setting it to false only simulates streaming text input — there is no true streaming generation or streaming input. This is the primary caveat for streaming voice clone.\n\n```python\n        non_streaming_mode:\n            Using non-streaming text input, this option currently only simulates streaming text input when set to `false`, \n            rather than enabling true streaming input or streaming generation.\n```\n\n### Overview > Introduction\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/README.md\n\nQwen3-TTS covers 10 major languages (Chinese, English, Japanese, Korean, German, French, Russian, Portuguese, Spanish, and Italian) as well as multiple dialectal voice profiles to meet global application needs. In addition, the models feature strong contextual understanding, enabling adaptive control of tone, speaking rate, and emotional expression based on instructions and text semantics, and they show markedly improved robustness to noisy input text. Key features:\n\n* **Powerful Speech Representation**: Powered by the self-developed Qwen3-TTS-Tokenizer-12Hz, it achieves efficient acoustic compression and high-dimensional semantic modeling of speech signals. It fully preserves paralinguistic information and acoustic environmental features, enabling high-speed, high-fidelity speech reconstruction through a lightweight non-DiT architecture.\n* **Universal End-to-End Architecture**: Utilizing a discrete multi-codebook LM architecture, it realizes full-information end-to-end speech modeling. This completely bypasses the information bottlenecks and cascading errors inherent in traditional LM+DiT schemes, significantly enhancing the model’s versatility, generation efficiency, and performance ceiling.\n* **Extreme Low-Latency Streaming Generation**: Based on the innovative Dual-Track hybrid streaming generation architecture, a single model supports both streaming and non-streaming generation. It can output the first audio packet immediately after a single character is input, with end-to-end synthesis latency as low as 97ms, meeting the rigorous demands of real-time interactive scenarios.\n* **Intelligent Text Understanding and Voice Control**: Supports speech generation driven by natural language instructions, allowing for flexible control over multi-dimensional acoustic attributes such as timbre, emotion, and prosody. By deeply integrating text semantic understanding, the model adaptively adjusts tone, rhythm, and emotional expression, achieving lifelike “what you imagine is what you hear” output."
+}

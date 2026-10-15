@@ -1,0 +1,81 @@
+{
+  "name": "sherpa-onnx",
+  "query": "offline Chinese English TTS Python OfflineTtsConfig generate save wav WebAssembly",
+  "search": {
+    "results": [
+      {
+        "id": "/k2-fsa/sherpa-onnx",
+        "title": "Sherpa ONNX",
+        "description": "Sherpa-onnx is a versatile toolkit for running speech recognition, speech synthesis, and other speech-related tasks locally across multiple platforms and programming languages.",
+        "branch": "master",
+        "lastUpdateDate": "2026-10-12T05:14:23.956Z",
+        "state": "finalized",
+        "totalTokens": 703163,
+        "totalSnippets": 4445,
+        "stars": 6560,
+        "trustScore": 6.6,
+        "benchmarkScore": 65.72,
+        "versions": []
+      },
+      {
+        "id": "/websites/k2-fsa_github_io_sherpa_onnx",
+        "title": "Sherpa ONNX",
+        "description": "Sherpa ONNX is a self-contained, offline speech recognition and text-to-speech toolkit that uses ONNX Runtime for neural network computation, supporting various platforms and programming languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-11T07:08:16.166Z",
+        "state": "finalized",
+        "totalTokens": 2689688,
+        "totalSnippets": 12299,
+        "stars": -1,
+        "trustScore": 9.7,
+        "benchmarkScore": 58.54,
+        "versions": []
+      },
+      {
+        "id": "/websites/pub_dev_packages_sherpa_onnx",
+        "title": "Sherpa ONNX",
+        "description": "Sherpa ONNX provides speech recognition, speech synthesis, speaker diarization, and speaker recognition using next-gen Kaldi with onnxruntime, designed for offline use across various platforms and programming languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-07-09T06:52:41.097Z",
+        "state": "finalized",
+        "totalTokens": 47533,
+        "totalSnippets": 699,
+        "stars": -1,
+        "trustScore": 9.9,
+        "benchmarkScore": 20.95,
+        "versions": []
+      },
+      {
+        "id": "/websites/rs_sherpa-onnx_sherpa_onnx",
+        "title": "Sherpa ONNX",
+        "description": "Sherpa ONNX is a Rust library for speech recognition and text-to-speech using ONNX models, supporting both offline and online/streaming speech processing with multiple pre-trained model formats.",
+        "branch": "main",
+        "lastUpdateDate": "2026-08-08T11:33:22.567Z",
+        "state": "finalized",
+        "totalTokens": 16124,
+        "totalSnippets": 196,
+        "stars": -1,
+        "trustScore": 9.7,
+        "benchmarkScore": 74.11,
+        "versions": []
+      },
+      {
+        "id": "/xdcobra/react-native-sherpa-onnx",
+        "title": "React Native Sherpa ONNX",
+        "description": "A React Native SDK providing offline and streaming speech processing capabilities including speech-to-text, text-to-speech, speaker diarization, speech enhancement, source separation, and VAD using sherpa-onnx.",
+        "branch": "main",
+        "lastUpdateDate": "2026-05-22T06:59:07.087Z",
+        "state": "finalized",
+        "totalTokens": 117811,
+        "totalSnippets": 1117,
+        "stars": 6,
+        "trustScore": 5.6,
+        "benchmarkScore": 73.6,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/k2-fsa/sherpa-onnx",
+  "context": "### Kokoro English TTS with speaker ID and WAV output\n\nSource: https://github.com/k2-fsa/sherpa-onnx/blob/master/nodejs-addon-examples/test_tts_non_streaming_kokoro_en.js\n\nNode.js sync API for offline TTS using a Kokoro English VITS model. Uses a kokoro config block with a voices.bin file. Speaker ID is set via sid: 6. Audio is generated and saved as WAV.\n\n```javascript\nconst sherpa_onnx = require('sherpa-onnx-node');\n\nfunction createOfflineTts() {\n  const config = {\n    model: {\n      kokoro: {\n        model: './kokoro-en-v0_19/model.onnx',\n        voices: './kokoro-en-v0_19/voices.bin',\n        tokens: './kokoro-en-v0_19/tokens.txt',\n        dataDir: './kokoro-en-v0_19/espeak-ng-data',\n      },\n      debug: true,\n      numThreads: 1,\n      provider: 'cpu',\n    },\n    maxNumSentences: 1,\n  };\n  return new sherpa_onnx.OfflineTts(config);\n}\n\nconst tts = createOfflineTts();\n\nconst text =\n    'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';\n\nconst generationConfig = new sherpa_onnx.GenerationConfig({\n  sid: 6,\n  speed: 1.0,\n  silenceScale: 0.2,\n});\n\nconst audio = tts.generate({text, generationConfig});\n\nconst filename = 'test-kokoro-en-6.wav';\nsherpa_onnx.writeWave(\n    filename, {samples: audio.samples, sampleRate: audio.sampleRate});\n\nconsole.log(`Saved to ${filename}`);\n```\n\n--------------------------------\n\n### Configure Matcha TTS model\n\nSource: https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/c-api/docs/tts.dox\n\nSets up a Matcha flow-matching TTS model with a separate vocoder (e.g., Vocos). Requires the matcha-icefall-en_US-ljspeech (English) or matcha-icefall-zh-baker (Chinese) model package.\n\n```c\nSherpaOnnxOfflineTtsConfig config;\nmemset(&config, 0, sizeof(config));\nconfig.model.matcha.acoustic_model =\n    \"./matcha-icefall-en_US-ljspeech/model-steps-3.onnx\";\nconfig.model.matcha.vocoder = \"./vocos-22khz-univ.onnx\";\nconfig.model.matcha.tokens =\n    \"./matcha-icefall-en_US-ljspeech/tokens.txt\";\nconfig.model.matcha.data_dir =\n    \"./matcha-icefall-en_US-ljspeech/espeak-ng-data\";\nconfig.model.num_threads = 2;\n\nconst SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);\n```\n\n--------------------------------\n\n### Download and run Kokoro TTS (Chinese + English, async API)\n\nSource: https://github.com/k2-fsa/sherpa-onnx/blob/master/nodejs-addon-examples/README.md\n\nDownloads the Kokoro multi-language model and runs the async TTS test script for Chinese and English.\n\n```bash\ncurl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2\ntar xf kokoro-multi-lang-v1_0.tar.bz2\nrm kokoro-multi-lang-v1_0.tar.bz2\n\nnode ./test_tts_non_streaming_kokoro_zh_en_async.js\n```\n\n--------------------------------\n\n### Create Supertonic offline TTS engine\n\nSource: https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/c-api/docs/tts.dox\n\nConfigures a SherpaOnnxOfflineTtsConfig for the Supertonic model package 'sherpa-onnx-supertonic-3-tts-int8-2026-05-11'. Sets model file paths for duration predictor, text encoder, vector estimator, vocoder, tts.json, unicode indexer, and voice style. Sets num_threads to 2. Then creates the TTS engine with SherpaOnnxCreateOfflineTts.\n\n```c\nSherpaOnnxOfflineTtsConfig config;\nmemset(&config, 0, sizeof(config));\nconfig.model.supertonic.duration_predictor =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/duration_predictor.int8.onnx\";\nconfig.model.supertonic.text_encoder =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/text_encoder.int8.onnx\";\nconfig.model.supertonic.vector_estimator =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vector_estimator.int8.onnx\";\nconfig.model.supertonic.vocoder =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/vocoder.int8.onnx\";\nconfig.model.supertonic.tts_json =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/tts.json\";\nconfig.model.supertonic.unicode_indexer =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/unicode_indexer.bin\";\nconfig.model.supertonic.voice_style =\n    \"./sherpa-onnx-supertonic-3-tts-int8-2026-05-11/voice.bin\";\nconfig.model.num_threads = 2;\n\nconst SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);\n```\n\n### ./test-offline-tts-matcha-zh.js\n\nSource: https://github.com/k2-fsa/sherpa-onnx/blob/master/nodejs-examples/README.md\n\n## ./test-offline-tts-matcha-zh.js\n\n[./test-offline-tts-matcha-zh.js](./test-offline-tts-matcha-zh.js) shows how to use\n[matcha-icefall-zh-baker](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)\nfor text-to-speech.\n\nYou can use the following command to run it:\n\n```bash\nwget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2\ntar xvf matcha-icefall-zh-baker.tar.bz2\nrm matcha-icefall-zh-baker.tar.bz2\n\nwget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx\n\nnode ./test-offline-tts-matcha-zh.js\n```"
+}

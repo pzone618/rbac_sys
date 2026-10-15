@@ -1,0 +1,39 @@
+{
+  "name": "F5-TTS",
+  "query": "F5 TTS pretrained model license commercial inference Chinese English",
+  "search": {
+    "results": [
+      {
+        "id": "/swivid/f5-tts",
+        "title": "F5-TTS",
+        "description": "F5-TTS is a fast text-to-speech synthesis model that generates fluent and faithful speech using flow matching and diffusion transformers.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-02T10:08:26.362Z",
+        "state": "finalized",
+        "totalTokens": 9428,
+        "totalSnippets": 146,
+        "stars": 11658,
+        "trustScore": 7.6,
+        "benchmarkScore": 68.67,
+        "versions": []
+      },
+      {
+        "id": "/vyncx/f5-tts-thai",
+        "title": "F5-TTS Thai",
+        "description": "A Thai language text-to-speech system using Flow Matching technology that generates natural-sounding Thai speech from text with support for multiple model versions.",
+        "branch": "main",
+        "lastUpdateDate": "2026-01-17T06:43:05.277Z",
+        "state": "finalized",
+        "totalTokens": 12065,
+        "totalSnippets": 66,
+        "stars": 116,
+        "trustScore": 6,
+        "benchmarkScore": 0,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/swivid/f5-tts",
+  "context": "### F5TTS_v1_Base config — dataset and tokenizer\n\nSource: https://github.com/swivid/f5-tts/blob/main/src/f5_tts/configs/F5TTS_v1_Base.yaml\n\nThe training dataset is Emilia_ZH_EN (Chinese & English only), tokenizer is pinyin (Chinese-specific), and a tokenizer_path field exists for custom vocabs. This confirms no official support for Vietnamese or other languages out of the box.\n\n```yaml\ndatasets:\n  name: Emilia_ZH_EN  # dataset name\n\nmodel:\n  name: F5TTS_v1_Base  # model name\n  tokenizer: pinyin  # tokenizer type\n  tokenizer_path: null  # if 'custom' tokenizer, define the path want to use (should be vocab.txt)\n```\n\n### Arabic > F5-TTS Small @ ar & en @ SILMA AI\n\nSource: https://github.com/swivid/f5-tts/blob/main/src/f5_tts/infer/SHARED.md\n\nModel: F5-TTS Small. Hugging Face: ckpt & vocab available at silma-ai/silma-tts. Data: Tens of thousands EN/AR. Model License: Apache-2.0. Pretrained by SILMA.AI. GitHub repo: https://github.com/SILMA-AI/silma-tts, Inference code.\n\n--------------------------------\n\n### French\n\nSource: https://github.com/swivid/f5-tts/blob/main/src/f5_tts/infer/SHARED.md\n\nThe F5-TTS Base model for French is available on Hugging Face, trained on LibriVox data with a cc-by-nc-4.0 license. It also links to an online inference space, a tutorial video for training new language models, and a GitHub discussion.\n\n--------------------------------\n\n### German\n\nSource: https://github.com/swivid/f5-tts/blob/main/src/f5_tts/infer/SHARED.md\n\nThe F5-TTS Base model for German is available on Hugging Face, trained on Mozilla Common Voice and crowdsourced data, with a cc-by-nc-4.0 license. It was finetuned by @hvoss-techfak.\n\n--------------------------------\n\n### Inference\n\nSource: https://github.com/swivid/f5-tts/blob/main/src/f5_tts/infer/README.md\n\nPretrained model checkpoints are available on Hugging Face and Model Scope, and will be automatically downloaded when running inference scripts. More checkpoints supporting additional languages can be found in SHARED.md."
+}

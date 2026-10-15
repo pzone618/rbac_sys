@@ -1,0 +1,67 @@
+{
+  "name": "CosyVoice",
+  "query": "CosyVoice multilingual Chinese streaming local deployment license",
+  "search": {
+    "results": [
+      {
+        "id": "/qwenaudio/cosyvoice",
+        "title": "CosyVoice",
+        "description": "CosyVoice is an advanced, multilingual, and zero-shot text-to-speech (TTS) system based on large language models, designed to synthesize natural speech with high content consistency and speaker similarity.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-26T01:40:43.880Z",
+        "state": "finalized",
+        "totalTokens": 90151,
+        "totalSnippets": 561,
+        "stars": 22599,
+        "trustScore": 8.8,
+        "benchmarkScore": 76.94,
+        "versions": []
+      },
+      {
+        "id": "/journey-ad/cosyvoice2-ex",
+        "title": "CosyVoice2-Ex",
+        "description": "CosyVoice2-Ex is an extended version of the CosyVoice2 text-to-speech platform, providing features like pre-trained speakers, 3-second rapid voice cloning, natural language control, automatic speech recognition, and custom voice preservation across Windows, Linux, and macOS.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-01T18:39:48.174Z",
+        "state": "finalized",
+        "totalTokens": 98025,
+        "totalSnippets": 601,
+        "stars": 108,
+        "trustScore": 9.9,
+        "benchmarkScore": 69.6,
+        "versions": []
+      },
+      {
+        "id": "/depasqualeorg/mlx-audio-plus",
+        "title": "MLX Audio Plus",
+        "description": "MLX Audio Plus is a Python library providing optimized implementations of audio AI models including TTS (Chatterbox, CosyVoice) and STT (Fun-ASR) ported to MLX framework.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-22T16:46:20.548Z",
+        "state": "finalized",
+        "totalTokens": 38693,
+        "totalSnippets": 293,
+        "stars": 8,
+        "trustScore": 7.9,
+        "benchmarkScore": 70.06,
+        "versions": []
+      },
+      {
+        "id": "/depasqualeorg/mlx-swift-audio",
+        "title": "MLX Swift Audio",
+        "description": "MLX Swift Audio is a Swift package providing text-to-speech and speech-to-text capabilities with support for multiple AI models including Whisper, CosyVoice, Chatterbox, and Fun-ASR.",
+        "branch": "main",
+        "lastUpdateDate": "2026-04-28T17:58:27.664Z",
+        "state": "finalized",
+        "totalTokens": 19434,
+        "totalSnippets": 166,
+        "stars": 78,
+        "trustScore": 7.9,
+        "benchmarkScore": 78.13,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/qwenaudio/cosyvoice",
+  "context": "### Clone CosyVoice repository with submodules\n\nSource: https://github.com/qwenaudio/cosyvoice/blob/main/README.md\n\nClones the CosyVoice repository recursively to include submodules. If the initial clone fails due to network issues, the command updates submodules manually.\n\n```sh\ngit clone --recursive https://github.com/FunAudioLLM/CosyVoice.git\n# If you failed to clone the submodule due to network failures, please run the following command until success\ncd CosyVoice\ngit submodule update --init --recursive\n```\n\n--------------------------------\n\n### Build Docker image for deployment\n\nSource: https://github.com/qwenaudio/cosyvoice/blob/main/README.md\n\nBuilds a Docker image for service deployment. The image is tagged as cosyvoice:v1.0.\n\n```sh\ncd runtime/python\ndocker build -t cosyvoice:v1.0 .\n```\n\n--------------------------------\n\n### CosyVoice.Inference\n\nSource: https://github.com/qwenaudio/cosyvoice/blob/main/_autodocs/endpoints.md\n\nServer-streaming RPC that performs text-to-speech inference. The request is a oneof containing one of four modes: sft, zero-shot, cross-lingual, or instruct. The response is a stream of audio chunks.\n\n```APIDOC\n## RPC CosyVoice.Inference\n\n### Description\nPerforms text-to-speech inference. The request is a oneof containing one of four modes: sft, zero-shot, cross-lingual, or instruct. The response is a stream of audio chunks.\n\n### Method\nRPC (server-streaming)\n\n### Endpoint\n`CosyVoice.Inference`\n\n### Parameters\n#### Request (oneof RequestPayload)\n- **sft_request** (sftRequest) - Optional - `string spk_id = 1; string tts_text = 2;`\n- **zero_shot_request** (zeroshotRequest) - Optional - `string tts_text = 1; string prompt_text = 2; bytes prompt_audio = 3;` (int16 PCM @ 16 kHz)\n- **cross_lingual_request** (crosslingualRequest) - Optional - `string tts_text = 1; bytes prompt_audio = 2;`\n- **instruct_request** (instructRequest) - Optional - `string tts_text = 1; string spk_id = 2; string instruct_text = 3;`\n\n### Response\n#### Success Response (stream)\n- **tts_audio** (bytes) - int16 PCM chunks. Each response contains one model output chunk.\n\n### Request Example\n```json\n{\n  \"sft_request\": {\n    \"spk_id\": \"string\",\n    \"tts_text\": \"string\"\n  }\n}\n```\n\n### Response Example\n```json\n{\n  \"tts_audio\": \"bytes\"\n}\n```\n```\n\n--------------------------------\n\n### Supported languages table (includes Portuguese)\n\nSource: https://github.com/qwenaudio/cosyvoice/blob/main/tokenizer/tokenizer.py\n\nThe only explicit enumeration of supported languages in the source. The multilingual tokenizer registers a `<|language|>` special token for each entry, and Portuguese is mapped to code `pt`. Note this `LANGUAGES` table belongs to the multilingual (whisper-based) `get_tokenizer` path; CosyVoice3 uses the Qwen tokenizer (`get_qwen_tokenizer`) and does not have its own per-language list in the source.\n\n```python\nLANGUAGES = {\n    \"en\": \"english\",\n    \"zh\": \"chinese\",\n    \"de\": \"german\",\n    \"es\": \"spanish\",\n    \"ru\": \"russian\",\n    \"ko\": \"korean\",\n    \"fr\": \"french\",\n    \"ja\": \"japanese\",\n    \"pt\": \"portuguese\",\n    \"tr\": \"turkish\",\n    \"pl\": \"polish\",\n    \"ca\": \"catalan\",\n    \"nl\": \"dutch\",\n    \"ar\": \"arabic\",\n    \"sv\": \"swedish\",\n    \"it\": \"italian\",\n    \"id\": \"indonesian\",\n    \"hi\": \"hindi\",\n```\n\n### Deployment notes\n\nSource: https://github.com/qwenaudio/cosyvoice/blob/main/_autodocs/endpoints.md\n\n## Deployment notes\n\n- Dockerfile at `runtime/python/Dockerfile` (built from `nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04` with conda env `cosyvoice`) installs both servers; the README's `docker run` invocations start either the gRPC or the FastAPI server.\n- The gradio web demo (`webui.py`, run with `python3 webui.py --port 50000 --model_dir pretrained_models/CosyVoice2-0.5B`) is a `gradio.Blocks` app (HTML/JS interface, `demo.queue(max_size=4, default_concurrency_limit=2)`, streaming audio output) and is not a JSON API."
+}

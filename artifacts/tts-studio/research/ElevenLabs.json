@@ -1,0 +1,81 @@
+{
+  "name": "ElevenLabs",
+  "query": "text to speech REST POST /v1/text-to-speech voice_id output_format headers",
+  "search": {
+    "results": [
+      {
+        "id": "/websites/elevenlabs_io",
+        "title": "ElevenLabs",
+        "description": "ElevenLabs is an AI audio research and deployment company offering advanced models for text-to-speech, speech-to-text, voice cloning, dubbing, and conversational AI.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-29T20:55:16.385Z",
+        "state": "finalized",
+        "totalTokens": 725271,
+        "totalSnippets": 5329,
+        "stars": -1,
+        "trustScore": 10,
+        "benchmarkScore": 71.92,
+        "versions": []
+      },
+      {
+        "id": "/elevenlabs/elevenlabs-python",
+        "title": "ElevenLabs Python",
+        "description": "The official Python SDK for ElevenLabs, enabling developers to integrate lifelike AI voices into their applications with ease.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-11T05:30:19.133Z",
+        "state": "finalized",
+        "totalTokens": 765389,
+        "totalSnippets": 4425,
+        "stars": 2577,
+        "trustScore": 9,
+        "benchmarkScore": 76.56,
+        "versions": []
+      },
+      {
+        "id": "/elevenlabs/elevenlabs-js",
+        "title": "ElevenLabs JS",
+        "description": "The official Node.js SDK for ElevenLabs, enabling developers to integrate lifelike AI voices into their applications with ease.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-12T11:35:12.457Z",
+        "state": "finalized",
+        "totalTokens": 249484,
+        "totalSnippets": 1825,
+        "stars": 257,
+        "trustScore": 9,
+        "benchmarkScore": 73.39,
+        "versions": []
+      },
+      {
+        "id": "/elevenlabs/elevenlabs-mcp",
+        "title": "ElevenLabs MCP",
+        "description": "Official ElevenLabs Model Context Protocol (MCP) server that enables interaction with powerful Text to Speech and audio processing APIs, allowing clients to generate speech, clone voices, transcribe audio, and more.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-07T02:46:13.140Z",
+        "state": "finalized",
+        "totalTokens": 35881,
+        "totalSnippets": 346,
+        "stars": 621,
+        "trustScore": 9,
+        "benchmarkScore": 80.2,
+        "versions": []
+      },
+      {
+        "id": "/elevenlabs/packages",
+        "title": "Elevenlabs Packages",
+        "description": "This monorepo contains multiple NPM packages published under the @elevenlabs scope, providing various functionalities for ElevenLabs projects.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-01T04:17:00.675Z",
+        "state": "finalized",
+        "totalTokens": 77958,
+        "totalSnippets": 380,
+        "stars": 26,
+        "trustScore": 9,
+        "benchmarkScore": 72.98,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/websites/elevenlabs_io",
+  "context": "### POST /v1/text-to-speech/:voice_id\n\nSource: https://elevenlabs.io/docs/api-reference/text-to-speech/convert\n\nConverts text into speech using a voice of your choice and returns audio.\n\n```APIDOC\n## POST /v1/text-to-speech/:voice_id\n\n### Description\nConverts text into speech using a voice of your choice and returns audio.\n\n### Method\nPOST\n\n### Endpoint\nhttps://api.elevenlabs.io/v1/text-to-speech/:voice_id\n\n### Headers\n- **xi-api-key** (string) - Optional - API key for authentication.\n\n### Parameters\n#### Path Parameters\n- **voice_id** (string) - Required - ID of the voice to be used. Use the Get voices endpoint list all the available voices.\n\n#### Query Parameters\n- **enable_logging** (boolean) - Optional - Defaults to `true`. When enable_logging is set to false zero retention mode will be used for the request. This will mean history features are unavailable for this request, including request stitching. Zero retention mode may only be used by enterprise customers.\n- **optimize_streaming_latency** (integer or null) - Optional (Deprecated) - Defaults to `None`. You can turn on latency optimizations at some cost of quality. The best possible final latency varies by model. Possible values: 0 - default mode (no latency optimizations) 1 - normal latency optimizations (about 50% of possible latency improvement of option 3) 2 - strong latency optimizations (about 75% of possible latency improvement of option 3) 3 - max latency optimizations 4 - max latency optimizations, but also with text normalizer turned off for even more latency savings (best latency, but can mispronounce eg numbers and dates).\n- **output_format** (enum) - Optional - Defaults to `mp3_44100_128`. Output format of the generated audio. Formatted as codec_sample_rate_bitrate. So an mp3 with 22.05kHz sample rate at 32kbs is represented as mp3_22050_32. MP3 with 192kbps bitrate requires you to be subscribed to Creator tier or above. PCM and WAV formats with 44.1kHz sample rate requires you to be subscribed to Pro tier or above. Note that the μ-law format (sometimes written mu-law, often approximated as u-law) is commonly used for Twilio audio inputs.\n\n### Request Body\n- **text** (string) - The text to be converted to speech.\n- **model_id** (string) - The model ID to use for speech generation.\n\n### Request Example\n```json\n{\n  \"text\": \"The first move is what sets everything in motion.\",\n  \"model_id\": \"eleven_multilingual_v2\"\n}\n```\n\n### Response\n#### Success Response (200)\nSuccessful response returning generated audio.\n```\n\n--------------------------------\n\n### Convert text to speech with cURL\n\nSource: https://elevenlabs.io/docs/api-reference/text-to-speech/convert\n\nSend a POST request to /v1/text-to-speech/:voice_id with a JSON body specifying the text and model_id. Specify optional query parameters like output_format to configure audio sample rate and encoding.\n\n```bash\n\ncurl -X POST \"https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128\" \\\n     -H \"xi-api-key: xi-api-key\" \\\n     -H \"Content-Type: application/json\" \\\n     -d '{\n  \"text\": \"The first move is what sets everything in motion.\",\n  \"model_id\": \"eleven_multilingual_v2\"\n}'\n\n```\n\n--------------------------------\n\n### POST /v1/text-to-speech/:voice_id/with-timestamps\n\nSource: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps\n\nGenerate speech from text with precise character-level timing information for audio-text synchronization.\n\n```APIDOC\n## POST /v1/text-to-speech/:voice_id/with-timestamps\n\n### Description\nGenerate speech from text with precise character-level timing information for audio-text synchronization.\n\n### Method\nPOST\n\n### Endpoint\nhttps://api.elevenlabs.io/v1/text-to-speech/:voice_id/with-timestamps\n\n### Parameters\n#### Path Parameters\n- **voice_id** (string) - Required - Voice ID to be used, you can use https://api.elevenlabs.io/v1/voices to list all the available voices.\n\n#### Headers\n- **xi-api-key** (string) - Optional - API key for authentication.\n\n#### Query Parameters\n- **enable_logging** (boolean) - Optional - Defaults to `true`. When enable_logging is set to false zero retention mode will be used for the request. This will mean history features are unavailable for this request, including request stitching. Zero retention mode may only be used by enterprise customers.\n- **optimize_streaming_latency** (integer or null) - Optional (Deprecated) - Defaults to `None`. You can turn on latency optimizations at some cost of quality. The best possible final latency varies by model. Possible values: 0 - default mode (no latency optimizations), 1 - normal latency optimizations, 2 - strong latency optimizations, 3 - max latency optimizations, 4 - max latency optimizations, but also with text normalizer turned off for even more latency savings.\n- **output_format** (enum) - Optional - Defaults to `mp3_44100_128`. Output format of the generated audio. Formatted as codec_sample_rate_bitrate.\n\n#### Request Body\n- **text** (string) - Required - The text to be converted to speech.\n\n### Request Example\n```json\n{\n  \"text\": \"This is a test for the API of ElevenLabs.\"\n}\n```\n\n### Response\n#### Success Response (200)\n- **audio_base64** (string) - Base64 encoded audio string.\n- **alignment** (object) - Character timing alignment data containing character lists, start times, and end times in seconds.\n- **normalized_alignment** (object) - Normalized character timing alignment data.\n\n#### Response Example\n```json\n{\n  \"audio_base64\": \"base64_encoded_audio_string\",\n  \"alignment\": {\n    \"characters\": [\n      \"H\",\n      \"e\",\n      \"l\",\n      \"l\",\n      \"o\"\n    ],\n    \"character_start_times_seconds\": [\n      0,\n      0.1,\n      0.2,\n      0.3,\n      0.4\n    ],\n    \"character_end_times_seconds\": [\n      0.1,\n      0.2,\n      0.3,\n      0.4,\n      0.5\n    ]\n  },\n  \"normalized_alignment\": {\n    \"characters\": [\n      \"H\",\n      \"e\",\n      \"l\",\n      \"l\",\n      \"o\"\n    ],\n    \"character_start_times_seconds\": [\n      0,\n      0.1,\n      0.2,\n      0.3,\n      0.4\n    ],\n    \"character_end_times_seconds\": [\n      0.1,\n      0.2,\n      0.3,\n      0.4,\n      0.5\n    ]\n  }\n}\n```\n```\n\n--------------------------------\n\n### Convert Text to Speech\n\nSource: https://elevenlabs.io/docs/api-reference/text-to-speech/convert\n\nConverts provided text into speech audio. Allows customization through model selection, voice settings overrides, pronunciation dictionaries, and text normalization parameters.\n\n```APIDOC\n## Convert Text to Speech\n\n### Description\nConverts the provided text into a generated audio file using specified voice and model configurations.\n\n### Request Body\n- **text** (string) - Required - The text that will get converted into speech.\n- **model_id** (string) - Optional - Identifier of the model that will be used (defaults to `eleven_multilingual_v2`). The model needs to have support for text to speech.\n- **language_code** (string | null) - Optional - Language code (ISO 639-1) used to enforce a language for the model and text normalization. Ignored if not supported by model. Not supported for multilingual_v2 models.\n- **voice_settings** (object | null) - Optional - Voice settings overriding stored settings for the given voice. Applied only on the given request.\n- **pronunciation_dictionary_locators** (list of objects | null) - Optional - A list of pronunciation dictionary locators (id, version_id) to be applied to the text in order (up to 3 locators).\n- **seed** (integer | null) - Optional - Integer between 0 and 4294967295. Used to make a best effort to sample deterministically.\n- **previous_text** (string | null) - Optional - The text that came before the text of the current request to improve continuity.\n- **next_text** (string | null) - Optional - The text that comes after the text of the current request to improve continuity.\n- **previous_request_ids** (list of strings | null) - Optional - A list of request_ids (up to 3) generated before this generation. Overrides `previous_text` if both are sent.\n- **next_request_ids** (list of strings | null) - Optional - A list of request_ids (up to 3) generated after this generation. Overrides `next_text` if both are sent.\n- **use_pvc_as_ivc** (boolean) - Optional - Whether to use the IVC version of a professional voice (defaults to `false`).\n- **apply_text_normalization** (enum: auto | on | off) - Optional - Controls text normalization mode (defaults to `auto`).\n- **apply_language_text_normalization** (boolean) - Optional - Controls language text normalization for supported languages such as Japanese (defaults to `false`).\n\n### Response\n#### Success Response\n- The generated audio file\n\n### Errors\n- **422** - Unprocessable Entity Error\n```\n\n### Changelog > API > View API changes > Updated Endpoints > Audio Generation (TTS, S2S, SFX, Voice Design)\n\nSource: https://elevenlabs.io/docs/changelog/2025/4/28\n\n* Updated endpoints to support new `output_format` option `pcm_48000`:\n    * Text to Speech (`POST /v1/text-to-speech/{voice_id}`)\n    * Text to Speech with Timestamps (`POST /v1/text-to-speech/{voice_id}/with-timestamps`)\n    * Text to Speech Stream (`POST /v1/text-to-speech/{voice_id}/stream`)\n    * Text to Speech Stream with Timestamps (`POST /v1/text-to-speech/{voice_id}/stream/with-timestamps`)\n    * Speech to Speech (`POST /v1/speech-to-speech/{voice_id}`)\n    * Speech to Speech Stream (`POST /v1/speech-to-speech/{voice_id}/stream`)\n    * Sound Generation (`POST /v1/sound-generation`)\n    * Create Voice Previews (`POST /v1/text-to-voice/create-previews`)"
+}

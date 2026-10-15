@@ -1,0 +1,12 @@
+{
+  "plugin_id": "plugins_6ad05b7405548191b6b3e6081319d549",
+  "release_id": "pluginrel_6ad05b7547908191a150642fd3666167",
+  "plugin_url": "https://chatgpt.com/plugins/plugins_6ad05b7405548191b6b3e6081319d549",
+  "name": "tts-studio",
+  "version": "0.1.0",
+  "scope": "USER",
+  "discoverability": "PRIVATE",
+  "archive": "tts-studio-0.1.0.zip",
+  "verified_uploaded_files": 28,
+  "current_session_mcp_activation": "not available; local Python execution requires a supporting installed host"
+}

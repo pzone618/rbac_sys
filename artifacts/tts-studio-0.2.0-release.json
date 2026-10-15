@@ -1,0 +1,17 @@
+{
+  "plugin_id": "plugins_6ad05b7405548191b6b3e6081319d549",
+  "name": "tts-studio",
+  "description": "Build website read-aloud features and generate audio with local and cloud TTS adapters.",
+  "version": "0.2.0",
+  "current_release_id": "pluginrel_6ad061560fd88191bfdd98f5fc47161a",
+  "scope": "USER",
+  "discoverability": "PRIVATE",
+  "plugin_url": "https://chatgpt.com/plugins/plugins_6ad05b7405548191b6b3e6081319d549",
+  "release_id": "pluginrel_6ad061560fd88191bfdd98f5fc47161a",
+  "latest_release_id": "pluginrel_6ad061560fd88191bfdd98f5fc47161a",
+  "status": "updated",
+  "archive": "tts-studio-0.2.0.zip",
+  "verified_uploaded_files": 33,
+  "readback_verified": true,
+  "current_session_mcp_activation": "not loaded; local host installation is separate"
+}

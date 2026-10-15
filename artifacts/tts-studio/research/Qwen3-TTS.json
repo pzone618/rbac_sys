@@ -1,0 +1,81 @@
+{
+  "name": "Qwen3-TTS",
+  "query": "Qwen3 TTS languages local inference license hardware",
+  "search": {
+    "results": [
+      {
+        "id": "/qwenlm/qwen3-tts",
+        "title": "Qwen3-TTS",
+        "description": "Qwen3-TTS is a series of powerful speech generation models developed by Qwen, offering comprehensive support for voice cloning, voice design, ultra-high-quality human-like speech generation, and natural language-based voice control across 10 major languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-18T07:46:19.446Z",
+        "state": "finalized",
+        "totalTokens": 100709,
+        "totalSnippets": 525,
+        "stars": 3324,
+        "trustScore": 9.1,
+        "benchmarkScore": 89.53,
+        "versions": []
+      },
+      {
+        "id": "/kritsanan1/qwen3-tts",
+        "title": "Qwen3-TTS",
+        "description": "Qwen3-TTS is a series of powerful speech generation capabilities developed by Qwen, offering comprehensive support for voice cloning, voice design, ultra-high-quality human-like speech generation, and natural language-based voice control across 10 major languages.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-09T12:08:07.377Z",
+        "state": "finalized",
+        "totalTokens": 37938,
+        "totalSnippets": 274,
+        "stars": 0,
+        "trustScore": 5.8,
+        "benchmarkScore": 85.25,
+        "versions": []
+      },
+      {
+        "id": "/andimarafioti/faster-qwen3-tts",
+        "title": "Faster Qwen3-TTS",
+        "description": "Faster Qwen3-TTS is a high-performance text-to-speech inference library that accelerates Qwen3-TTS using CUDA graph capture, achieving real-time generation with streaming and non-streaming support.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-19T00:30:54.386Z",
+        "state": "finalized",
+        "totalTokens": 36436,
+        "totalSnippets": 225,
+        "stars": 926,
+        "trustScore": 9.4,
+        "benchmarkScore": 80.06,
+        "versions": []
+      },
+      {
+        "id": "/websites/deepwiki_andimarafioti_faster-qwen3-tts",
+        "title": "Faster Qwen3-TTS (DeepWiki)",
+        "description": "Faster Qwen3-TTS is an optimized wrapper for the Qwen3-TTS text-to-speech model that achieves 4-10x throughput speedup using CUDA graph optimization.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-19T00:43:14.478Z",
+        "state": "finalized",
+        "totalTokens": 122226,
+        "totalSnippets": 857,
+        "stars": -1,
+        "trustScore": 8.9,
+        "benchmarkScore": 0,
+        "versions": []
+      },
+      {
+        "id": "/rheosoph/any-tts",
+        "title": "Any TTS",
+        "description": "Any TTS is a Rust text-to-speech library built around Candle that provides a unified trait-based API for modern open TTS models like Kokoro, OmniVoice, Qwen3-TTS, VibeVoice, and Voxtral.",
+        "branch": "main",
+        "lastUpdateDate": "2026-08-22T05:26:53.104Z",
+        "state": "finalized",
+        "totalTokens": 4014,
+        "totalSnippets": 58,
+        "stars": 20,
+        "trustScore": 9.6,
+        "benchmarkScore": 0,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/qwenlm/qwen3-tts",
+  "context": "### Custom voice generation with Qwen3TTSModel\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/README.md\n\nLoads a Qwen3-TTS CustomVoice model and generates speech for a single text or a batch of texts. The single inference uses the 'Vivian' speaker with a Chinese instruction; the batch inference uses different speakers and languages. The model must be loaded with torch.float16 or torch.bfloat16 to use flash_attention_2.\n\n```python\nimport torch\nimport soundfile as sf\nfrom qwen_tts import Qwen3TTSModel\n\nmodel = Qwen3TTSModel.from_pretrained(\n    \"Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice\",\n    device_map=\"cuda:0\",\n    dtype=torch.bfloat16,\n    attn_implementation=\"flash_attention_2\",\n)\n\n# single inference\nwavs, sr = model.generate_custom_voice(\n    text=\"其实我真的有发现，我是一个特别善于观察别人情绪的人。\",\n    language=\"Chinese\", # Pass `Auto` (or omit) for auto language adaptive; if the target language is known, set it explicitly.\n    speaker=\"Vivian\",\n    instruct=\"用特别愤怒的语气说\", # Omit if not needed.\n)\nsf.write(\"output_custom_voice.wav\", wavs[0], sr)\n\n# batch inference\nwavs, sr = model.generate_custom_voice(\n    text=[\n        \"其实我真的有发现，我是一个特别善于观察别人情绪的人。\", \n        \"She said she would be here by noon.\"\n    ],\n    language=[\"Chinese\", \"English\"],\n    speaker=[\"Vivian\", \"Ryan\"],\n    instruct=[\"\", \"Very happy.\"]\n)\nsf.write(\"output_custom_voice_1.wav\", wavs[0], sr)\nsf.write(\"output_custom_voice_2.wav\", wavs[1], sr)\n```\n\n--------------------------------\n\n### get_supported_speakers / get_supported_languages\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/_autodocs/api-reference/qwen3-tts-for-conditional-generation.md\n\nReturn the supported speaker IDs and language codes. These methods provide the available speakers and languages for the TTS model.\n\n```APIDOC\n## get_supported_speakers / get_supported_languages\n\n### Description\nReturn the `supported_speakers` keys view (`spk_id` keys; e.g. `\"vivian\", \"serena\", ...`) and the `supported_languages` list (`[\"auto\", ...]` without dialect keys; dialects are reachable via the auto/speaker-dialect path).\n\n### Methods\n- `get_supported_speakers(self)`\n- `get_supported_languages(self)`\n\n### Returns\n- `get_supported_speakers`: A view of the supported speaker keys.\n- `get_supported_languages`: A list of supported language codes.\n\n### Example\n```python\nprint(list(model.get_supported_speakers()), model.get_supported_languages())\n```\n```\n\n--------------------------------\n\n### Age as a training attribute in premium timbres\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/README.md\n\nShows that age is one of the multi-dimensional training attributes encoded in the 9 premium timbres for the CustomVoice model, alongside gender, language, and dialect.\n\n```markdown\n| Qwen3-TTS-12Hz-1.7B-CustomVoice | Provides style control over target timbres via user instructions; supports 9 premium timbres covering various combinations of gender, age, language, and dialect. | Chinese, English, Japanese, Korean, German, French, Russian, Portuguese, Spanish, Italian | ✅ | ✅ |\n| Qwen3-TTS-12Hz-0.6B-CustomVoice | Supports 9 premium timbres covering various combinations of gender, age, language, and dialect. | Chinese, English, Japanese, Korean, German, French, Russian, Portuguese, Spanish, Italian | ✅ |  |\n```\n\n--------------------------------\n\n### Standard inference dtype is bfloat16 with flash-attention-2\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/README.md\n\nEvery model-loading example in the README uses dtype=torch.bfloat16 and attn_implementation=flash_attention_2 as the standard configuration for the 1.7B VoiceDesign model.\n\n```python\nmodel = Qwen3TTSModel.from_pretrained(\n    \"Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign\",\n    device_map=\"cuda:0\",\n    dtype=torch.bfloat16,\n    attn_implementation=\"flash_attention_2\",\n)\n```\n\n### vLLM Usage > Offline Inference\n\nSource: https://github.com/qwenlm/qwen3-tts/blob/main/README.md\n\n### Offline Inference\nYou can use vLLM-Omni to inference Qwen3-TTS locally, we provide examples in [vLLM-Omni repo](https://github.com/vllm-project/vllm-omni/tree/main/examples/offline_inference/qwen3_tts) which can generate audio output:"
+}

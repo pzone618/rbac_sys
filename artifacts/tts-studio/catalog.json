@@ -1,0 +1,188 @@
+{
+  "checkedOn": "2026-10-15",
+  "scope": "Curated shortlist for website reading and audio generation; not an exhaustive registry or a quality benchmark. Recommended uses are editorial judgments. Model versions, language lists and licenses must be checked before deployment.",
+  "offline": [
+    {
+      "name": "System speech (Windows SAPI / macOS / Android)",
+      "use": "Fast setup, accessibility and fallback; quality depends on installed voices",
+      "status": "Windows SAPI and macOS say adapters implemented; macOS requires target-device verification",
+      "source": "https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer"
+    },
+    {
+      "name": "Web Speech API local voices",
+      "use": "Zero-model-download website read-aloud; cannot export audio through the standard API",
+      "status": "Browser module implemented; localService filter plus disconnected-device verification required",
+      "source": "https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisVoice/localService"
+    },
+    {
+      "name": "sherpa-onnx",
+      "use": "Cross-platform offline runtime for VITS, Matcha, Kokoro and other model families",
+      "status": "Python adapter implemented for VITS/Matcha/Kokoro; user supplies models",
+      "source": "https://k2-fsa.github.io/sherpa/onnx/tts/index.html"
+    },
+    {
+      "name": "Kokoro / kokoro-js",
+      "use": "Compact neural speech; browser WASM/WebGPU or local runtime; language support differs by checkpoint and frontend",
+      "status": "Via sherpa with matching model config; native kokoro-js integration is a candidate",
+      "source": "https://github.com/hexgrad/kokoro"
+    },
+    {
+      "name": "Piper (OHF-Voice)",
+      "use": "CPU and edge-device speech with downloadable voices",
+      "status": "Candidate; current engine is GPL; voice licenses are separate; old rhasspy repository is not the current upstream",
+      "source": "https://github.com/OHF-Voice/piper1-gpl"
+    },
+    {
+      "name": "Qwen3-TTS",
+      "use": "Local multilingual speech with fixed/custom voices and instruction control, depending on model",
+      "status": "Candidate; evaluate GPU requirements and exact model variant",
+      "source": "https://github.com/QwenLM/Qwen3-TTS"
+    },
+    {
+      "name": "CosyVoice",
+      "use": "Chinese and multilingual local synthesis, including streaming and reference-voice workflows",
+      "status": "Candidate; capabilities differ by version and serving implementation",
+      "source": "https://github.com/FunAudioLLM/CosyVoice"
+    },
+    {
+      "name": "MeloTTS",
+      "use": "Conventional multilingual local speech; a useful CPU-oriented baseline",
+      "status": "Candidate",
+      "source": "https://github.com/myshell-ai/MeloTTS"
+    },
+    {
+      "name": "GPT-SoVITS",
+      "use": "Few-shot speaker customization, especially Chinese and East Asian languages",
+      "status": "Candidate; larger training and reference-audio workflow",
+      "source": "https://github.com/RVC-Boss/GPT-SoVITS"
+    },
+    {
+      "name": "Chatterbox",
+      "use": "Expressive and multilingual reference-voice synthesis",
+      "status": "Candidate; select exact model and language pack",
+      "source": "https://github.com/resemble-ai/chatterbox"
+    },
+    {
+      "name": "F5-TTS",
+      "use": "Research and reference-voice experimentation",
+      "status": "Conditional candidate; official pretrained models carry noncommercial terms; do not treat code license as model license",
+      "source": "https://github.com/SWivid/F5-TTS"
+    },
+    {
+      "name": "Fish Speech",
+      "use": "Expressive multilingual speech and locally hosted voice workflows",
+      "status": "Conditional candidate; inspect current Fish Audio Research License and model terms",
+      "source": "https://github.com/fishaudio/fish-speech"
+    },
+    {
+      "name": "OpenVoice",
+      "use": "Voice tone conversion and cloning combined with a base TTS engine",
+      "status": "Specialist candidate; not a standalone replacement for every TTS pipeline",
+      "source": "https://github.com/myshell-ai/OpenVoice"
+    },
+    {
+      "name": "VibeVoice",
+      "use": "Long-form and multi-speaker speech research",
+      "status": "Specialist candidate; verify availability, model license and active TTS serving path separately from ASR",
+      "source": "https://github.com/microsoft/VibeVoice"
+    },
+    {
+      "name": "eSpeak NG",
+      "use": "Very lightweight deterministic fallback and phonemization; robotic speech quality",
+      "status": "Candidate",
+      "source": "https://github.com/espeak-ng/espeak-ng"
+    }
+  ],
+  "online": [
+    {
+      "name": "Azure AI Speech",
+      "use": "General multilingual websites, SSML and enterprise integration",
+      "status": "REST WAV/MP3 adapter and voice listing implemented",
+      "source": "https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech"
+    },
+    {
+      "name": "ElevenLabs",
+      "use": "Expressive narration, voice selection and provider-supported timing metadata",
+      "status": "MP3 adapter and first page of voice listing implemented; timestamps/streaming are not implemented",
+      "source": "https://elevenlabs.io/docs/api-reference/text-to-speech/convert"
+    },
+    {
+      "name": "OpenAI Speech API",
+      "use": "Instruction-guided speech and integration with existing OpenAI applications",
+      "status": "Use configurable speech-api adapter with an available model; no model version is hardcoded",
+      "source": "https://developers.openai.com/api/docs/guides/text-to-speech"
+    },
+    {
+      "name": "Google Cloud Text-to-Speech",
+      "use": "Google Cloud applications, multilingual speech and voice families including Chirp",
+      "status": "Candidate; API/SSML/streaming support differs by voice family",
+      "source": "https://docs.cloud.google.com/text-to-speech/docs"
+    },
+    {
+      "name": "Gemini TTS",
+      "use": "Prompt-controlled speech and multi-speaker audio production",
+      "status": "Candidate; distinct from Google Cloud Text-to-Speech and from Live conversational audio",
+      "source": "https://ai.google.dev/gemini-api/docs/speech-generation"
+    },
+    {
+      "name": "Amazon Polly",
+      "use": "AWS applications, SSML, standard/neural/generative/long-form speech",
+      "status": "Candidate; voice, engine and region compatibility must match",
+      "source": "https://docs.aws.amazon.com/polly/latest/dg/voice-engines-polly.html"
+    },
+    {
+      "name": "Alibaba Cloud Model Studio Qwen TTS / CosyVoice",
+      "use": "Chinese websites and Alibaba Cloud integration",
+      "status": "dashscope adapter implements Qwen-TTS non-realtime Beijing/Singapore WAV output; hosted CosyVoice is still a candidate",
+      "source": "https://help.aliyun.com/zh/model-studio/speech-synthesis-api-reference/"
+    },
+    {
+      "name": "Volcengine Doubao Speech",
+      "use": "Chinese voice applications, streaming and asynchronous long-form audio",
+      "status": "Candidate; API/resource versions have different authentication and capabilities",
+      "source": "https://docs.volcengine.com/docs/DoubaoVoice/Tasksubmission?lang=zh"
+    },
+    {
+      "name": "MiniMax Speech",
+      "use": "Multilingual expressive speech and streaming voice products",
+      "status": "Candidate",
+      "source": "https://platform.minimax.io/docs/api-reference/speech-t2a-websocket"
+    },
+    {
+      "name": "Tencent Cloud TTS",
+      "use": "Chinese/English mixed speech and Tencent Cloud integration",
+      "status": "Candidate",
+      "source": "https://cloud.tencent.com/document/api/1073/37995"
+    },
+    {
+      "name": "iFlytek TTS",
+      "use": "Chinese voice services and existing iFlytek ecosystems",
+      "status": "Candidate; use current streaming API rather than retired ordinary WebAPI",
+      "source": "https://www.xfyun.cn/doc/tts/online_tts/API.html"
+    },
+    {
+      "name": "Cartesia Sonic",
+      "use": "Latency-sensitive interactive speech",
+      "status": "Candidate; validate target-region latency and language quality",
+      "source": "https://docs.cartesia.ai/2025-04-16/get-started/overview"
+    },
+    {
+      "name": "Resemble AI",
+      "use": "Managed speech and custom-voice workflows with Chatterbox ecosystem",
+      "status": "Candidate; hosted service terms differ from local models",
+      "source": "https://www.resemble.ai/products/text-to-speech"
+    },
+    {
+      "name": "Edge TTS",
+      "use": "Preferred online reading and cached MP3 generation across macOS/Linux/Windows",
+      "status": "Implemented with explicit proxy and timeout; network availability is not guaranteed",
+      "source": "https://github.com/rany2/edge-tts"
+    },
+    {
+      "name": "Youdao dictionary voice",
+      "use": "English word and short-phrase pronunciation and audio saving",
+      "status": "Implemented with HTTPS, encoded query and US/UK accents; not arbitrary-text TTS; no paid API credentials",
+      "source": "https://dict.youdao.com/"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+### Communicate constructor with options
+
+Source: https://github.com/rany2/edge-tts/blob/master/_autodocs/configuration.md
+
+Creates an edge_tts.Communicate instance with text, voice, rate, volume, pitch, boundary, proxy, and timeouts. All parameters after voice are keyword-only. Validation failures raise TypeError or ValueError.
+
+```python
+import edge_tts
+
+c = edge_tts.Communicate(
+    "hello",
+    voice="en-US-EmmaMultilingualNeural",
+    rate="-10%",
+    volume="+20%",
+    pitch="+5Hz",
+    boundary="WordBoundary",
+    proxy="http://localhost:8080",      # optional
+    connect_timeout=20, receive_timeout=120,
+)
+```
+
+--------------------------------
+
+### list_voices function signature
+
+Source: https://github.com/rany2/edge-tts/blob/master/_autodocs/api-reference/voices.md
+
+Signature of the async function that returns the full voice catalog. Accepts an optional aiohttp connector and proxy URL. The connector is passed to the internal aiohttp.ClientSession(connector=..., trust_env=True), and the proxy is passed to session.get(..., proxy=...).
+
+```python
+async def list_voices(
+    *, connector: Optional[aiohttp.BaseConnector] = None, proxy: Optional[str] = None
+) -> List[Voice]:
+```
+
+--------------------------------
+
+### list_voices(connector=None, proxy=None) — async
+
+Source: https://github.com/rany2/edge-tts/blob/master/_autodocs/api-reference/voices.md
+
+Asynchronously retrieves the full list of available voices. Returns a list of Voice objects, each guaranteed to have non-empty ContentCategories and VoicePersonalities. Handles clock-skew adjustment on 403 responses.
+
+```APIDOC
+## `list_voices(connector=None, proxy=None)` — async
+
+### Description
+Asynchronously fetches the complete voice catalog from the service. The result is a list of `Voice` objects, each with normalized `VoiceTag` fields (missing keys are filled with empty lists/dicts).
+
+### Method
+GET
+
+### Endpoint
+`VOICE_LIST` (internal constant) with query parameters `Sec-MS-GEC` and `Sec-MS-GEC-Version` appended.
+
+### Parameters
+#### Query Parameters
+- **connector** (`Optional[aiohttp.BaseConnector]`) - Optional - Connector passed to the internal `aiohttp.ClientSession(connector=..., trust_env=True)`.
+- **proxy** (`Optional[str]`) - Optional - Proxy URL passed to `session.get(..., proxy=...)`.
+
+### Request Example
+```python
+import asyncio
+import edge_tts
+
+async def main() -> None:
+    voices = await edge_tts.list_voices()
+    print(len(voices), "voices")
+    print(voices[0]["ShortName"], voices[0]["Gender"])
+
+asyncio.run(main())
+```
+
+### Response
+#### Success Response (200)
+- **List[Voice]** - The full voice catalog. Each `Voice` is a dict containing at least `ShortName` and `Gender`.
+
+#### Response Example
+```python
+# Example usage with proxy
+import asyncio
+import edge_tts
+from edge_tts.exceptions import SkewAdjustmentError
+
+async def main() -> None:
+    try:
+        voices = await edge_tts.list_voices(proxy="http://127.0.0.1:8080")
+    except SkewAdjustmentError as exc:
+        print("clock-skew correction failed:", exc)
+
+asyncio.run(main())
+```
+
+### Error Handling
+- **aiohttp.ClientResponseError** - Non-403 errors.
+- **SkewAdjustmentError** - 403 without a parseable `Date` header.
+- **json.JSONDecodeError** - Invalid JSON response.
+- **SSL/network errors** - Underlying connection issues.
+
+On 403, the client adjusts clock skew and retries once.
+```
+
+--------------------------------
+
+### Communicate.__init__
+
+Source: https://github.com/rany2/edge-tts/blob/master/_autodocs/configuration.md
+
+Constructor for the Communicate class, used to generate speech from text. Accepts text, voice, rate, volume, pitch, boundary, connector, proxy, and timeout options.
+
+```APIDOC
+## Communicate.__init__
+
+### Description
+Initializes a Communicate instance for text-to-speech synthesis. All parameters after `voice` are keyword-only.
+
+### Method
+Constructor
+
+### Parameters
+#### Path Parameters
+None
+
+#### Query Parameters
+None
+
+#### Request Body
+- **text** (str) - Required - Input text; cleaned, XML-escaped, split into ≤ 4096-byte chunks.
+- **voice** (str) - Optional - Default: `"en-US-EmmaMultilingualNeural"` - Short name (`cy-GB-NiaNeural`) or full Microsoft form; expanded + validated by `TTSConfig`.
+- **rate** (str) - Optional - Default: `"+0%"` - Must match `^[+-]\d+%$`.
+- **volume** (str) - Optional - Default: `"+0%"` - Must match `^[+-]\d+%$`.
+- **pitch** (str) - Optional - Default: `"+0Hz"` - Must match `^[+-]\d+Hz$`.
+- **boundary** (Literal["WordBoundary", "SentenceBoundary"]) - Optional - Default: `"SentenceBoundary"` - Controls which metadata events the service emits (and therefore which `SubMaker.feed()` accepts).
+- **connector** (Optional[aiohttp.BaseConnector]) - Optional - Default: `None` - aiohttp connector for pool/DNS control.
+- **proxy** (Optional[str]) - Optional - Default: `None` - Proxy URL for the WebSocket connection.
+- **connect_timeout** (Optional[int]) - Optional - Default: `10` - `ClientTimeout(sock_connect=...)` seconds.
+- **receive_timeout** (Optional[int]) - Optional - Default: `60` - `ClientTimeout(sock_read=...)` seconds.
+
+### Request Example
+```python
+import edge_tts
+
+c = edge_tts.Communicate(
+    "hello",
+    voice="en-US-EmmaMultilingualNeural",
+    rate="-10%",
+    volume="+20%",
+    pitch="+5Hz",
+    boundary="WordBoundary",
+    proxy="http://localhost:8080",      # optional
+    connect_timeout=20, receive_timeout=120,
+)
+```
+
+### Response
+#### Success Response (200)
+- **Communicate instance** - The constructed object.
+
+#### Response Example
+```python
+c = edge_tts.Communicate(...)
+```
+
+### Error Handling
+Validation failures raise `TypeError`/`ValueError` (see [errors.md](errors.md)).
+```
+
+### list_voices / VoicesManager.create options
+
+Source: https://github.com/rany2/edge-tts/blob/master/_autodocs/configuration.md
+
+## `list_voices` / `VoicesManager.create` options
+
+Source: `src/edge_tts/voices.py:58-85`, `96-108`.
+
+| Function | Key | Type | Required | Default | Description |
+|----------|-----|------|----------|---------|-------------|
+| `list_voices(connector=..., proxy=...)` | `connector` | `Optional[aiohttp.BaseConnector]` | no | `None` | Passed to the internal `ClientSession`. |
+| `list_voices(connector=..., proxy=...)` | `proxy` | `Optional[str]` | no | `None` | Proxy for the voice-list GET. |
+| `VoicesManager.create(custom_voices=...)` | `custom_voices` | `Optional[List[Voice]]` | no | `None` | Skip the network fetch and use this catalog instead. |
+
+`VoicesManager.find()` kwargs (`Gender`, `Locale`, `Language`) are query criteria, not config — see [voices.md](api-reference/voices.md) and [types.md](types.md).

@@ -1,0 +1,4 @@
+# Optional online client and bundled audio decoder. Install with the MCP Python.
+edge-tts==7.3.1
+imageio-ffmpeg==0.6.0
+# Offline neural synthesis is optional: install sherpa-onnx separately after choosing a model.

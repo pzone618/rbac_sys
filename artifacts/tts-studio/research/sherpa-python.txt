@@ -1,0 +1,174 @@
+### Generate speech with vits-piper-sv_SE-alma-medium in Python
+
+Source: https://k2-fsa.github.io/sherpa/onnx/tts/all/Swedish/vits-piper-sv_SE-alma-medium.html
+
+Python example that loads the vits-piper-sv_SE-alma-medium model and synthesizes speech from the given text, saving the result as test.mp3. Requires the model to be downloaded and sherpa-onnx installed.
+
+```python
+import sherpa_onnx
+import soundfile as sf
+
+config = sherpa_onnx.OfflineTtsConfig(
+    model=sherpa_onnx.OfflineTtsModelConfig(
+        vits=sherpa_onnx.OfflineTtsVitsModelConfig(
+            model="vits-piper-sv_SE-alma-medium/sv_SE-alma-medium.onnx",
+            data_dir="vits-piper-sv_SE-alma-medium/espeak-ng-data",
+            tokens="vits-piper-sv_SE-alma-medium/tokens.txt",
+        ),
+        num_threads=1,
+    ),
+)
+
+if not config.validate():
+    raise ValueError("Please check your config")
+
+tts = sherpa_onnx.OfflineTts(config)
+audio = tts.generate(text="Liten skog, med många träd",
+                     sid=0,
+                     speed=1.0)
+
+sf.write("test.mp3", audio.samples, samplerate=audio.sample_rate)
+```
+
+--------------------------------
+
+### OfflineTtsModelConfig
+
+Source: https://k2-fsa.github.io/sherpa/onnx/c-api/html/structsherpa__onnx_1_1cxx_1_1OfflineTtsModelConfig.html
+
+Configuration structure for initializing offline TTS models.
+
+```APIDOC
+## struct sherpa_onnx::cxx::OfflineTtsModelConfig
+
+### Description
+Configuration structure used to define the model family and inference settings for offline text-to-speech.
+
+### Public Attributes
+- **vits** (OfflineTtsVitsModelConfig) - Vits model configuration.
+- **matcha** (OfflineTtsMatchaModelConfig) - Matcha model configuration.
+- **kokoro** (OfflineTtsKokoroModelConfig) - Kokoro model configuration.
+- **kitten** (OfflineTtsKittenModelConfig) - Kitten model configuration.
+- **zipvoice** (OfflineTtsZipvoiceModelConfig) - Zipvoice model configuration.
+- **pocket** (OfflineTtsPocketModelConfig) - Pocket model configuration.
+- **supertonic** (OfflineTtsSupertonicModelConfig) - Supertonic model configuration.
+- **num_threads** (int32_t) - Number of inference threads (default: 1).
+- **debug** (bool) - Enable verbose debug logging (default: false).
+- **provider** (std::string) - Execution provider (default: "cpu").
+```
+
+--------------------------------
+
+### OfflineTtsMatchaModelConfig
+
+Source: https://k2-fsa.github.io/sherpa/onnx/c-api/html/structsherpa__onnx_1_1cxx_1_1OfflineTtsMatchaModelConfig.html
+
+Configuration structure for Matcha TTS models containing paths to model components and inference parameters.
+
+```APIDOC
+## struct sherpa_onnx::cxx::OfflineTtsMatchaModelConfig
+
+### Description
+Configuration structure for initializing a Matcha TTS model.
+
+### Public Attributes
+- **acoustic_model** (std::string) - Path to the acoustic model file.
+- **vocoder** (std::string) - Path to the vocoder model file.
+- **lexicon** (std::string) - Path to the lexicon file.
+- **tokens** (std::string) - Path to the tokens file.
+- **data_dir** (std::string) - Path to the data directory.
+- **dict_dir** (std::string) - Path to the dictionary directory.
+- **noise_scale** (float) - Noise scale for generation (default: 0.667).
+- **length_scale** (float) - Length scale for generation (default: 1.0).
+```
+
+--------------------------------
+
+### OfflineTtsVitsModelConfig
+
+Source: https://k2-fsa.github.io/sherpa/onnx/javascript-api/html/interfaces/types.OfflineTtsVitsModelConfig.html
+
+Configuration options for an offline TTS VITS model.
+
+```APIDOC
+## Interface OfflineTtsVitsModelConfig
+
+### Description
+Configuration options for an offline TTS VITS model.
+
+### Properties
+
+#### `Optional` dataDir
+- **Type**: string
+- **Description**: Path to the directory containing model data.
+
+#### `Optional` lengthScale
+- **Type**: number
+- **Description**: Controls the length of the generated speech.
+
+#### `Optional` lexicon
+- **Type**: string
+- **Description**: Path to a custom lexicon file.
+
+#### `Optional` model
+- **Type**: string
+- **Description**: Path to the VITS model file.
+
+#### `Optional` noiseScale
+- **Type**: number
+- **Description**: Controls the amount of noise in the generated speech.
+
+#### `Optional` noiseScaleW
+- **Type**: number
+- **Description**: Controls the width of the noise distribution.
+
+#### `Optional` tokens
+- **Type**: string
+- **Description**: Path to the tokens file.
+```
+
+--------------------------------
+
+### Dart: Run vits-piper-hi_IN-pratham-medium TTS
+
+Source: https://k2-fsa.github.io/sherpa/onnx/tts/all/Hindi/vits-piper-hi_IN-pratham-medium.html
+
+Dart example that configures and runs the vits-piper-hi_IN-pratham-medium model. It sets the model files, generates speech from a Hindi text, and saves the output to test.wav. Uses OfflineTtsVitsModelConfig, OfflineTtsModelConfig, and OfflineTtsGenerationConfig.
+
+```dart
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+
+void main() {
+  final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+    model: 'vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx',
+    tokens: 'vits-piper-hi_IN-pratham-medium/tokens.txt',
+    dataDir: 'vits-piper-hi_IN-pratham-medium/espeak-ng-data',
+  );
+
+  final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
+    vits: vits,
+    numThreads: 1,
+    debug: true,
+  );
+  final config = sherpa_onnx.OfflineTtsConfig(
+    model: modelConfig,
+    maxNumSenetences: 1,
+  );
+
+  final tts = sherpa_onnx.OfflineTts(config);
+  final genConfig = sherpa_onnx.OfflineTtsGenerationConfig(
+    sid: 0,
+    speed: 1.0,
+    silenceScale: 0.2,
+  );
+  final audio = tts.generateWithConfig(text: 'यह मत पूछो कि तुम्हारा देश तुम्हारे लिए क्या कर सकता है। यह पूछो कि तुम अपने देश के लिए क्या कर सकते हो।', config: genConfig);
+  tts.free();
+
+  sherpa_onnx.writeWave(
+    filename: 'test.wav',
+    samples: audio.samples,
+    sampleRate: audio.sampleRate,
+  );
+  print('Saved to test.wav');
+}
+```

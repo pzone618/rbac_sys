@@ -1,0 +1,81 @@
+{
+  "name": "Azure Speech",
+  "query": "text to speech REST cognitiveservices v1 SSML subscription key output format",
+  "search": {
+    "results": [
+      {
+        "id": "/websites/learn_microsoft_en-us_azure_ai-services_speech-service",
+        "title": "Speech service",
+        "description": "The Speech service allows users to recognize speech, synthesize speech, get real-time translations, transcribe conversations, or integrate speech into bot experiences.",
+        "branch": "main",
+        "lastUpdateDate": "2026-07-23T17:49:39.913Z",
+        "state": "finalized",
+        "totalTokens": 613482,
+        "totalSnippets": 5980,
+        "stars": -1,
+        "trustScore": 10,
+        "benchmarkScore": 76.22,
+        "versions": []
+      },
+      {
+        "id": "/websites/learn_microsoft_azure_ai-services_speech-service",
+        "title": "Azure Speech",
+        "description": "Azure Speech enables developers to recognize and synthesize speech, translate audio in real time, transcribe conversations, and integrate voice capabilities into applications.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-12T14:46:48.855Z",
+        "state": "finalized",
+        "totalTokens": 54,
+        "totalSnippets": 4,
+        "stars": -1,
+        "trustScore": 10,
+        "benchmarkScore": 2.5,
+        "versions": []
+      },
+      {
+        "id": "/websites/learn_microsoft_en-us_azure",
+        "title": "Azure",
+        "description": "Azure is a comprehensive set of cloud services from Microsoft that helps you build, deploy, and manage applications and services through a global network of Microsoft-managed data centers.",
+        "branch": "main",
+        "lastUpdateDate": "2026-06-14T18:12:08.998Z",
+        "state": "finalized",
+        "totalTokens": 29772832,
+        "totalSnippets": 381896,
+        "stars": -1,
+        "trustScore": 10,
+        "benchmarkScore": 69.39,
+        "versions": []
+      },
+      {
+        "id": "/microsoftdocs/azure-docs",
+        "title": "Microsoft Azure",
+        "description": "Microsoft Azure is a cloud computing service that offers a wide range of services, including computing, analytics, storage, and networking, to help organizations build, deploy, and manage applications and services.",
+        "branch": "main",
+        "lastUpdateDate": "2026-09-10T04:55:17.450Z",
+        "state": "finalized",
+        "totalTokens": 19864407,
+        "totalSnippets": 238278,
+        "stars": 10486,
+        "trustScore": 8.9,
+        "benchmarkScore": 59.69,
+        "versions": []
+      },
+      {
+        "id": "/ansible-collections/azure",
+        "title": "Azure",
+        "description": "Azure is an Ansible collection that provides modules and plugins for interacting with Microsoft Azure cloud services.",
+        "branch": "dev",
+        "lastUpdateDate": "2026-09-20T07:12:01.098Z",
+        "state": "finalized",
+        "totalTokens": 60452,
+        "totalSnippets": 454,
+        "stars": 272,
+        "trustScore": 9,
+        "benchmarkScore": 52.8,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/websites/learn_microsoft_en-us_azure_ai-services_speech-service",
+  "context": "### POST /cognitiveservices/v1\n\nSource: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech\n\nThe text-to-speech REST API endpoint allows you to convert text to speech by using Speech Synthesis Markup Language (SSML).\n\n```APIDOC\n## POST /cognitiveservices/v1\n\n### Description\nConverts text to speech using Speech Synthesis Markup Language (SSML). Requests must be sent to the regional endpoint corresponding to your Speech resource.\n\n### Method\nPOST\n\n### Endpoint\nhttps://{region}.tts.speech.microsoft.com/cognitiveservices/v1\n\n### Response\n#### Success Response (200)\n- **OK** - The request was successful.\n\n#### Error Handling\n- **400 Bad Request**: A required parameter is missing, empty, or null, or a parameter value is invalid.\n- **401 Unauthorized**: The request is not authorized. Verify your resource key or token and region.\n- **429 Too Many Requests**: Quota or rate limit exceeded.\n- **502 Bad Gateway**: Network or server-side problem.\n```\n\n--------------------------------\n\n### POST /cognitiveservices/v1\n\nSource: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech\n\nSynthesizes speech from text or SSML input. The request body should contain the text or SSML to be converted, and the response returns the synthesized audio file.\n\n```APIDOC\n## POST /cognitiveservices/v1\n\n### Description\nSynthesizes speech from text or SSML input. The request body should contain the text or SSML to be converted, and the response returns the synthesized audio file.\n\n### Method\nPOST\n\n### Endpoint\n/cognitiveservices/v1\n\n### Parameters\n#### Request Headers\n- **Authorization** (string) - Required - An authorization token preceded by the word 'Bearer'.\n- **Content-Type** (string) - Required - Specifies the content type. Accepted value: 'application/ssml+xml'.\n- **X-Microsoft-OutputFormat** (string) - Required - Specifies the audio output format.\n- **User-Agent** (string) - Required - The application name (fewer than 255 characters).\n\n#### Request Body\n- **Body** (string) - Required - Plain text (ASCII or UTF-8) or SSML to be synthesized.\n\n### Request Example\nPOST /cognitiveservices/v1 HTTP/1.1\n\nX-Microsoft-OutputFormat: riff-24khz-16bit-mono-pcm\nContent-Type: application/ssml+xml\nHost: YourResourceName.cognitiveservices.azure.com\nAuthorization: Bearer [Base64 access_token]\nUser-Agent: <Your application name>\n\n<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Male' name='en-US-ChristopherNeural'>I'm excited to try text to speech!</voice></speak>\n\n### Response\n#### Success Response (200)\n- **Body** (binary) - The response body is an audio file in the requested format.\n```\n\n### Convert text to speech\n\nSource: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech\n\nThe cognitiveservices/v1 endpoint is used for text-to-speech conversion via the REST API, utilizing Speech Synthesis Markup Language (SSML) to define the output. Users must select the specific endpoint that corresponds to the region where their Speech resource is deployed to ensure proper connectivity.\n\n--------------------------------\n\n### Convert text to speech\n\nSource: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-speech-synthesis\n\nTo perform text to speech synthesis, you must provide your Speech resource key and the corresponding resource region. You can customize the output by adjusting the audio format header, selecting specific voices from the available list, and directing the server response to a designated output file.\n\n--------------------------------\n\n### Convert text to speech > Additional Information\n\nSource: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-speech-synthesis\n\nThe Speech service supports advanced synthesis patterns including retrieving responses as in-memory streams, customizing audio sample and bit rates, and utilizing Speech Synthesis Markup Language (SSML) for complex requests. Users can also leverage neural voices and subscribe to synthesis events to manage results effectively."
+}

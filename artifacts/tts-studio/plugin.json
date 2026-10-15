@@ -1,0 +1,31 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "email": "leon.i.long.yu@gmail.com",
+    "name": "Leon Yu"
+  },
+  "description": "Build website read-aloud features and generate audio with local and cloud TTS adapters.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "capabilities": [],
+        "category": "Productivity",
+        "defaultPrompt": "为当前网站接入指定文本朗读和文本转音频，优先复用 TTS Studio，并说明在线和离线能力。",
+        "developerName": "Leon Yu",
+        "displayName": "TTS Studio",
+        "longDescription": "为网站接入指定文本朗读，使用本地或云端引擎生成音频；包含可复用浏览器模块、MCP 工具和有来源的引擎选型清单。本地运行需要 Python，神经模型与云端凭据需另行配置。",
+        "shortDescription": "网站朗读与在线、离线音频生成"
+      }
+    }
+  },
+  "keywords": [
+    "tts",
+    "speech",
+    "offline",
+    "audio",
+    "website",
+    "chinese"
+  ],
+  "name": "tts-studio",
+  "version": "0.2.0"
+}

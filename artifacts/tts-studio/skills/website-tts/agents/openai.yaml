@@ -1,0 +1,4 @@
+interface:
+  display_name: "Website TTS"
+  short_description: "Build website speech playback and audio export"
+  default_prompt: "Use $website-tts to add text reading and online or offline audio generation to this website."

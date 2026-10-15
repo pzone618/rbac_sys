@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "tts-studio": {
+      "command": "python3",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server/tts_server.py"
+      ],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}

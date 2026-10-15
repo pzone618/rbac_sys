@@ -1,0 +1,53 @@
+{
+  "name": "piper",
+  "query": "Piper text to speech local voices license Python API",
+  "search": {
+    "results": [
+      {
+        "id": "/rhasspy/piper",
+        "title": "Piper",
+        "description": "Piper is a fast, local neural text to speech system that runs on device.",
+        "branch": "master",
+        "lastUpdateDate": "2026-07-08T00:49:01.699Z",
+        "state": "finalized",
+        "totalTokens": 24203,
+        "totalSnippets": 111,
+        "stars": 8736,
+        "trustScore": 8.5,
+        "benchmarkScore": 71.3,
+        "versions": []
+      },
+      {
+        "id": "/ohf-voice/piper1-gpl",
+        "title": "Piper",
+        "description": "Piper is a fast, local neural text-to-speech engine that embeds espeak-ng for phonemization, offering various APIs and features for TTS integration.",
+        "branch": "main",
+        "lastUpdateDate": "2026-10-07T07:38:58.984Z",
+        "state": "finalized",
+        "totalTokens": 219738,
+        "totalSnippets": 1403,
+        "stars": 241,
+        "trustScore": 7.7,
+        "benchmarkScore": 86.74,
+        "versions": []
+      },
+      {
+        "id": "/lyx52/pipersharp",
+        "title": "PiperSharp TTS",
+        "description": "PiperSharp is a simple C# wrapper for the piper text-to-speech application, enabling users to download and utilize voice models to generate audio.",
+        "branch": "master",
+        "lastUpdateDate": "2026-08-14T18:16:35.825Z",
+        "state": "finalized",
+        "totalTokens": 24292,
+        "totalSnippets": 325,
+        "stars": 37,
+        "trustScore": 5.5,
+        "benchmarkScore": 0,
+        "versions": []
+      }
+    ],
+    "searchFilterApplied": false
+  },
+  "libraryId": "/rhasspy/piper",
+  "context": "### Synthesize Speech from Text using Piper Voice (Python)\n\nSource: https://context7.com/rhasspy/piper/llms.txt\n\nSynthesizes speech from pre-trained ONNX models using the PiperVoice class. It supports speaker selection, speed control, and audio quality parameters. Outputs can be saved to a WAV file or streamed as raw audio bytes. Requires the 'piper' library and a pre-trained ONNX model.\n\n```python\nfrom piper import PiperVoice\nimport wave\n\n# Load a voice model (downloads automatically if not found)\nvoice = PiperVoice.load(\"en_US-lessac-medium.onnx\", use_cuda=False)\n\n# Synthesize speech to a WAV file\ntext = \"Hello, this is a test of the Piper text to speech system.\"\nwith wave.open(\"output.wav\", \"wb\") as wav_file:\n    voice.synthesize(\n        text=text,\n        wav_file=wav_file,\n        speaker_id=None,          # Optional: for multi-speaker models\n        length_scale=1.0,         # Speaking speed (1.0=normal, <1=faster, >1=slower)\n        noise_scale=0.667,        # Generator noise for variation\n        noise_w=0.8,              # Phoneme width variation\n        sentence_silence=0.2      # Seconds of silence between sentences\n    )\n\n# Stream raw audio bytes for real-time processing\nfor audio_bytes in voice.synthesize_stream_raw(text, sentence_silence=0.0):\n    # Process audio_bytes (16-bit PCM, mono, 22050 Hz)\n    pass\n\n```\n\n--------------------------------\n\n### Phonemization and ID Conversion with PiperVoice\n\nSource: https://context7.com/rhasspy/piper/llms.txt\n\nUtilize the `PiperVoice` class in Python to phonemize text and convert phonemes to numeric IDs for model input. This also demonstrates direct synthesis from phoneme IDs.\n\n```python\nfrom piper import PiperVoice\n\n# Load voice\nvoice = PiperVoice.load(\"en_US-lessac-medium.onnx\")\n\n# Phonemize text (returns list of sentences, each with phoneme list)\ntext = \"Hello world. How are you today?\"\nsentence_phonemes = voice.phonemize(text)\n# Returns: [['h', 'ə', 'l', 'o͡ʊ', ' ', 'w', 'ɜː', 'l', 'd'], ['h', 'a͡ʊ', ' ', '...'], ...]\n\n# Convert phonemes to IDs for model input\nphonemes = ['h', 'ə', 'l', 'o͡ʊ']\nphoneme_ids = voice.phonemes_to_ids(phonemes)\n# Returns: [1, 14, 0, 87, 0, 23, 0, 56, 0, 2]  # BOS + phoneme_ids + EOS\n\n# Synthesize directly from phoneme IDs\naudio_bytes = voice.synthesize_ids_to_raw(\n    phoneme_ids=phoneme_ids,\n    speaker_id=0,\n    length_scale=1.0,\n    noise_scale=0.667,\n    noise_w=0.8\n)\n```\n\n### APIs and Key Functions > Synthesizing Speech from Text (Python)\n\nSource: https://context7.com/rhasspy/piper/llms.txt\n\nThe `PiperVoice` class provides speech synthesis from pre-trained ONNX models with support for speaker selection, speed control, and audio quality parameters.\n\n--------------------------------\n\n### Piper - Neural Text-to-Speech System\n\nSource: https://context7.com/rhasspy/piper/llms.txt\n\nPiper is a fast, local neural text-to-speech (TTS) system optimized for edge devices like the Raspberry Pi 4. It uses ONNX-based voice models trained with the VITS (Variational Inference with adversarial learning for end-to-end Text-to-Speech) architecture to convert text into natural-sounding speech. The system consists of two main components: a training framework (`piper_train`) for creating custom voice models, and an inference runtime (`piper`) for synthesizing speech from trained models.\n\n--------------------------------\n\n### Piper TTS > Integration and Use Cases\n\nSource: https://context7.com/rhasspy/piper/llms.txt\n\nPiper is ideally suited for applications that demand local, privacy-preserving text-to-speech capabilities, eliminating the need for cloud-based services. Its lightweight nature and ONNX runtime support make it particularly effective for deployment on resource-constrained edge devices like the Raspberry Pi, without significantly compromising audio quality. Piper's multi-speaker functionality is beneficial for diverse applications, including audiobook narration and creating more natural conversational AI experiences."
+}
